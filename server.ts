@@ -1,17 +1,18 @@
 // server.ts
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import path from 'path';
 import {
     fetchBinanceSymbols,
     fetchDataForSymbolAndTimeframe,
-    fetchGreedFear,
-    RSIData,
+
+
     Timeframe,
     createWebSocket,
 
 } from './dataManager';
 import WebSocket from 'ws';
-import { calculateBuySignals, SignalData } from './signalCalculator';
+
 import { createClient } from 'redis';
 import { fetchBinanceExchangeInfo } from './api';
 
@@ -32,6 +33,9 @@ const port = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Redis Client Setup
 const redisClient = createClient({
@@ -88,56 +92,9 @@ app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction)
 
 
 // Endpoint to get Greed and Fear Index
-app.get('/greed-fear', async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const greedFearIndex = await fetchGreedFear();
-        res.json({ index: greedFearIndex });
-    } catch (error) {
-        next(error);
-    }
-});
 
-// New endpoint for signals
-app.get('/signals/:timeframe', async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const { timeframe } = req.params;
-        const validTimeframes: Timeframe[] = ['5m', '15m', '30m', '1h', '4h'];
 
-        if (!validTimeframes.includes(timeframe as Timeframe)) {
-            res.status(400).json({ error: 'Invalid timeframe' });
-            return;
-        }
 
-        // Check if data is in cache
-        const cachedSignals = await redisClient.get(`signals:${timeframe}`);
-        if (cachedSignals) {
-            console.log(`Serving signals for ${timeframe} from cache`);
-            const parsedSignals = JSON.parse(cachedSignals);
-            const ttl = await redisClient.pTTL(`signals:${timeframe}`);
-            res.json({
-                signals: parsedSignals.signals,
-                cachedAt: formatTimestamp(parsedSignals.timestamp),
-                expiresIn: Math.round(ttl / 1000) + ' seconds'
-            });
-        } else {
-            console.log(`Calculating signals for ${timeframe} and caching`);
-            const signals = await calculateBuySignals(timeframe as Timeframe);
-            const timestamp = Date.now();
-            await redisClient.set(
-                `signals:${timeframe}`,
-                JSON.stringify({ signals, timestamp }),
-                { EX: CACHE_CONFIG.SIGNAL_TTL }
-            );
-            res.json({
-                signals,
-                cachedAt: formatTimestamp(timestamp),
-                expiresIn: CACHE_CONFIG.SIGNAL_TTL + ' seconds'
-            });
-        }
-    } catch (error) {
-        next(error);
-    }
-});
 
 // WebSocket for real-time price updates
 const connectedClients = new Map<string, Response>();
@@ -285,25 +242,7 @@ const evaluateAllDataOnStartup = async () => {
         }
     }
 
-    console.log('Starting signal calculations for all timeframes...');
-    await Promise.all(
-        ['5m', '15m', '30m', '1h', '4h'].map(async (tf) => {
-            const signalCacheKey = `signals:${tf}`;
-            console.log(`Calculating signals for ${tf}...`);
-            const signals = await calculateBuySignals(tf as Timeframe);
-            if (signals && signals.length > 0) {
-                console.log(`Found ${signals.length} signals for ${tf}`);
-                await redisClient.set(
-                    signalCacheKey,
-                    JSON.stringify({ signals, timestamp: Date.now() }),
-                    { EX: CACHE_CONFIG.SIGNAL_TTL }
-                );
-            } else {
-                console.log(`No signals found for ${tf}`);
-            }
-        })
-    );
-    console.log('Completed initial signal calculations');
+
 };
 
 // Setup periodic cache updates
@@ -324,28 +263,7 @@ function setupPeriodicUpdates() {
     }, 5 * 60 * 1000); // 5 minutes - clearer calculation
 
     // Update signals every 3 minutes
-    setInterval(async () => {
-        console.log('Starting periodic signal calculations...');
-        for (const tf of ['5m', '15m', '30m', '1h', '4h'] as Timeframe[]) {
-            try {
-                console.log(`Calculating signals for ${tf}...`);
-                const signals = await calculateBuySignals(tf);
-                if (signals && signals.length > 0) {
-                    console.log(`Found ${signals.length} signals for ${tf}`);
-                    await redisClient.set(
-                        `signals:${tf}`,
-                        JSON.stringify({ signals, timestamp: Date.now() }),
-                        { EX: CACHE_CONFIG.SIGNAL_TTL }
-                    );
-                } else {
-                    console.log(`No signals found for ${tf}`);
-                }
-            } catch (error) {
-                console.error(`Error calculating signals for ${tf}:`, error);
-            }
-        }
-        console.log('Completed periodic signal calculations');
-    }, 180 * 1000); // 3 minutes
+    // 3 minutes
 }
 
 // Utility function to split array into chunks
