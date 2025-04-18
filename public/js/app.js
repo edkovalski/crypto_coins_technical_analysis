@@ -1,6 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const symbolsContainer = document.getElementById('symbolsContainer');
     const searchInput = document.getElementById('searchInput');
+    const ema10_20Checkbox = document.getElementById('ema10_20_crossover');
+    const ema50_200Checkbox = document.getElementById('ema50_200_crossover');
+    const sma50_200Checkbox = document.getElementById('sma50_200_crossover');
+    const rsiOversoldCheckbox = document.getElementById('rsi_oversold');
+    const rsiOverboughtCheckbox = document.getElementById('rsi_overbought');
+    const priceAboveEma10Checkbox = document.getElementById('price_above_ema10');
+    const priceAboveEma20Checkbox = document.getElementById('price_above_ema20');
+    const priceBelowEma10Checkbox = document.getElementById('price_below_ema10');
+    const priceBelowEma20Checkbox = document.getElementById('price_below_ema20');
+    const macdHistogramPositiveCheckbox = document.getElementById('macd_histogram_positive');
+    const macdHistogramNegativeCheckbox = document.getElementById('macd_histogram_negative');
+    const obvPositiveCheckbox = document.getElementById('obv_positive');
     let allSymbols = [];
 
     // Function to format indicator value
@@ -128,6 +140,139 @@ document.addEventListener('DOMContentLoaded', () => {
         return indicators;
     }
 
+    // Function to check if EMAs have crossed over
+    function checkEMACrossover(ema1, ema2) {
+        return ema1 !== null && ema2 !== null && ema1 > ema2;
+    }
+
+    // Function to check if SMAs have crossed over
+    function checkSMACrossover(sma1, sma2) {
+        return sma1 !== null && sma2 !== null && sma1 > sma2;
+    }
+
+    // Function to check if timeframe matches filter conditions
+    function timeframeMatchesFilters(data) {
+        if (!data) return false;
+
+        // Get all checkbox states
+        const ema10_20Checked = ema10_20Checkbox.checked;
+        const ema50_200Checked = ema50_200Checkbox.checked;
+        const sma50_200Checked = sma50_200Checkbox.checked;
+        const rsiOversoldChecked = rsiOversoldCheckbox.checked;
+        const rsiOverboughtChecked = rsiOverboughtCheckbox.checked;
+        const priceAboveEma10Checked = priceAboveEma10Checkbox.checked;
+        const priceAboveEma20Checked = priceAboveEma20Checkbox.checked;
+        const priceBelowEma10Checked = priceBelowEma10Checkbox.checked;
+        const priceBelowEma20Checked = priceBelowEma20Checkbox.checked;
+        const macdHistogramPositiveChecked = macdHistogramPositiveCheckbox.checked;
+        const macdHistogramNegativeChecked = macdHistogramNegativeCheckbox.checked;
+        const obvPositiveChecked = obvPositiveCheckbox.checked;
+
+        // If no filters are checked, show all timeframes
+        if (!ema10_20Checked && !ema50_200Checked && !sma50_200Checked &&
+            !rsiOversoldChecked && !rsiOverboughtChecked &&
+            !priceAboveEma10Checked && !priceAboveEma20Checked &&
+            !priceBelowEma10Checked && !priceBelowEma20Checked &&
+            !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
+            !obvPositiveChecked) {
+            return true;
+        }
+
+        let matches = true;
+
+        // Check EMA crossovers
+        if (ema10_20Checked) {
+            matches = matches && checkEMACrossover(data.ema10, data.ema20);
+        }
+        if (ema50_200Checked) {
+            matches = matches && checkEMACrossover(data.ema50, data.ema200);
+        }
+
+        // Check SMA crossovers
+        if (sma50_200Checked) {
+            matches = matches && checkSMACrossover(data.sma50, data.sma200);
+        }
+
+        // Check RSI conditions
+        if (rsiOversoldChecked) {
+            matches = matches && data.rsi !== null && data.rsi < 30;
+        }
+        if (rsiOverboughtChecked) {
+            matches = matches && data.rsi !== null && data.rsi > 70;
+        }
+
+        // Check Price vs EMA conditions
+        if (priceAboveEma10Checked) {
+            matches = matches && data.price !== null && data.ema10 !== null && data.price > data.ema10;
+        }
+        if (priceAboveEma20Checked) {
+            matches = matches && data.price !== null && data.ema20 !== null && data.price > data.ema20;
+        }
+        if (priceBelowEma10Checked) {
+            matches = matches && data.price !== null && data.ema10 !== null && data.price < data.ema10;
+        }
+        if (priceBelowEma20Checked) {
+            matches = matches && data.price !== null && data.ema20 !== null && data.price < data.ema20;
+        }
+
+        // Check MACD conditions
+        if (macdHistogramPositiveChecked) {
+            matches = matches && data.macd !== null && data.macd.histogram > 0;
+        }
+        if (macdHistogramNegativeChecked) {
+            matches = matches && data.macd !== null && data.macd.histogram < 0;
+        }
+
+        // Check OBV condition
+        if (obvPositiveChecked) {
+            matches = matches && data.obv !== null && data.obv.obv > 0;
+        }
+
+        return matches;
+    }
+
+    // Function to filter symbols based on search and conditions
+    function filterSymbols() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const cards = document.querySelectorAll('.symbol-card');
+
+        cards.forEach(card => {
+            const symbolName = card.querySelector('.symbol-name').textContent.toLowerCase();
+            const timeframeItems = card.querySelectorAll('.timeframe-item');
+            let hasVisibleTimeframes = false;
+
+            timeframeItems.forEach(item => {
+                const timeframeData = item.dataset.timeframeData ? JSON.parse(item.dataset.timeframeData) : null;
+                const matchesFilters = timeframeMatchesFilters(timeframeData);
+                const matchesSearch = symbolName.includes(searchTerm);
+
+                if (matchesFilters && matchesSearch) {
+                    item.style.display = 'block';
+                    hasVisibleTimeframes = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show/hide the entire card based on whether any timeframes are visible
+            card.style.display = hasVisibleTimeframes ? 'block' : 'none';
+        });
+    }
+
+    // Add event listeners for all checkboxes and search input
+    const filterElements = [
+        ema10_20Checkbox, ema50_200Checkbox, sma50_200Checkbox,
+        rsiOversoldCheckbox, rsiOverboughtCheckbox,
+        priceAboveEma10Checkbox, priceAboveEma20Checkbox,
+        priceBelowEma10Checkbox, priceBelowEma20Checkbox,
+        macdHistogramPositiveCheckbox, macdHistogramNegativeCheckbox,
+        obvPositiveCheckbox, searchInput
+    ];
+
+    filterElements.forEach(element => {
+        element.addEventListener('change', filterSymbols);
+    });
+
     // Function to create a symbol card
     function createSymbolCard(symbol, data) {
         const card = document.createElement('div');
@@ -148,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.data) {
                 const timeframeItem = document.createElement('div');
                 timeframeItem.className = 'timeframe-item';
+                timeframeItem.dataset.timeframeData = JSON.stringify(item.data);
 
                 const timeframeHeader = document.createElement('div');
                 timeframeHeader.className = 'timeframe-header';
@@ -271,17 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
             symbolsContainer.innerHTML = '<div class="loading">Error loading data. Please try again later.</div>';
         }
     }
-
-    // Search functionality
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const cards = document.querySelectorAll('.symbol-card');
-
-        cards.forEach(card => {
-            const symbolName = card.querySelector('.symbol-name').textContent.toLowerCase();
-            card.style.display = symbolName.includes(searchTerm) ? 'block' : 'none';
-        });
-    });
 
     // Initial data fetch
     fetchAndDisplaySymbols();

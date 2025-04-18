@@ -16,6 +16,85 @@
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search symbols...">
             </div>
+            <div class="filters-container">
+                <div class="filter-group">
+                    <h3>Moving Average Crossovers</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="ema10_20_crossover">
+                            <span>10/20 EMA Crossover</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="ema50_200_crossover">
+                            <span>50/200 EMA Crossover</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="sma50_200_crossover">
+                            <span>50/200 SMA Crossover</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>RSI Conditions</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="rsi_oversold">
+                            <span>RSI < 30 (Oversold)</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="rsi_overbought">
+                            <span>RSI > 70 (Overbought)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Price vs EMA</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="price_above_ema10">
+                            <span>Price > EMA 10</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="price_above_ema20">
+                            <span>Price > EMA 20</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="price_below_ema10">
+                            <span>Price < EMA 10</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="price_below_ema20">
+                            <span>Price < EMA 20</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>MACD Conditions</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="macd_histogram_positive">
+                            <span>MACD Histogram > 0</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="macd_histogram_negative">
+                            <span>MACD Histogram < 0</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Volume Conditions</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="obv_positive">
+                            <span>OBV > 0</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <main>
