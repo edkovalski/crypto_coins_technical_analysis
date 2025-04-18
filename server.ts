@@ -64,7 +64,7 @@ app.get('/symbols', async (req: Request, res: Response, next: NextFunction) => {
 app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { symbol } = req.params;
-        const validTimeframes: Timeframe[] = ['5m', '30m', '15m', '1h', '4h'];
+        const validTimeframes: Timeframe[] = ['5m', '15m', '30m', '1h', '4h'];
         const allTimeframeData = await Promise.all(
             validTimeframes.map(async (timeframe) => {
                 const cachedData = await redisClient.get(`indicator:${symbol}:${timeframe}`);
