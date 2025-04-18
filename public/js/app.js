@@ -26,10 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (name.toLowerCase().includes('sma') ||
                 name.toLowerCase().includes('ema') ||
                 name.toLowerCase().includes('vwap')) {
-                return value.toFixed(2);
+                return value.toFixed(6);
             }
             // Format other numeric values
-            return value.toFixed(4);
+            return value.toFixed(6);
         }
         return value;
     }
