@@ -67,6 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (value > 0.05) return 'positive';
             if (value < -0.05) return 'negative';
             return 'neutral';
+        } else if (name.includes('Ichimoku')) {
+            if (price > value) return 'positive';
+            if (price < value) return 'negative';
+            return 'neutral';
         }
         return 'neutral';
     }
@@ -358,6 +362,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     { name: '50%', value: data.fibonacci.levels['0.5'], color: 'neutral' },
                     { name: '61.8%', value: data.fibonacci.levels['0.618'], color: 'neutral' },
                     { name: '100%', value: data.fibonacci.levels['1'], color: 'neutral' }
+                ]
+            });
+        }
+
+        // Ichimoku Cloud Section
+        if (data.ichimoku && data.ichimoku.conversion !== null) {
+            sections.push({
+                type: 'section',
+                title: 'Ichimoku Cloud',
+                indicators: [
+                    {
+                        name: 'Conversion Line',
+                        value: data.ichimoku.conversion,
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.conversion, data.price)
+                    },
+                    {
+                        name: 'Base Line',
+                        value: data.ichimoku.base,
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.base, data.price)
+                    },
+                    {
+                        name: 'Leading Span A',
+                        value: data.ichimoku.spanA,
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.spanA, data.price)
+                    },
+                    {
+                        name: 'Leading Span B',
+                        value: data.ichimoku.spanB,
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.spanB, data.price)
+                    }
                 ]
             });
         }
