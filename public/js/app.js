@@ -2,10 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const symbolsContainer = document.getElementById('symbolsContainer');
     const searchInput = document.getElementById('searchInput');
     const ema10_20Checkbox = document.getElementById('ema10_20_crossover');
+    const ema10_20BelowCheckbox = document.getElementById('ema10_20_below_crossover');
     const ema50_200Checkbox = document.getElementById('ema50_200_crossover');
+    const ema50_200BelowCheckbox = document.getElementById('ema50_200_below_crossover');
     const sma50_200Checkbox = document.getElementById('sma50_200_crossover');
-    const rsiOversoldCheckbox = document.getElementById('rsi_oversold');
-    const rsiOverboughtCheckbox = document.getElementById('rsi_overbought');
+    const rsiMinInput = document.getElementById('rsi_min');
+    const rsiMaxInput = document.getElementById('rsi_max');
+    const stochMinInput = document.getElementById('stoch_min');
+    const stochMaxInput = document.getElementById('stoch_max');
     const priceAboveEma10Checkbox = document.getElementById('price_above_ema10');
     const priceAboveEma20Checkbox = document.getElementById('price_above_ema20');
     const priceBelowEma10Checkbox = document.getElementById('price_below_ema10');
@@ -13,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const macdHistogramPositiveCheckbox = document.getElementById('macd_histogram_positive');
     const macdHistogramNegativeCheckbox = document.getElementById('macd_histogram_negative');
     const obvPositiveCheckbox = document.getElementById('obv_positive');
+    const obvNegativeCheckbox = document.getElementById('obv_negative');
+    const adxWeakCheckbox = document.getElementById('adx_weak');
+    const adxStrongCheckbox = document.getElementById('adx_strong');
     let allSymbols = [];
 
     // Function to format indicator value
@@ -36,113 +43,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to get indicator color based on value
     function getIndicatorColor(name, value, price) {
-        if (typeof value === 'number' && price) {
-            if (name.toLowerCase().includes('rsi')) {
-                if (value > 70) return 'overbought';
-                if (value < 30) return 'oversold';
-            }
-            if (name.toLowerCase().includes('macd')) {
-                return value > 0 ? 'positive' : 'negative';
-            }
-            if (name.toLowerCase().includes('adx')) {
-                return value > 25 ? 'positive' : 'neutral';
-            }
-            if (name.toLowerCase().includes('stochastic')) {
-                if (value > 80) return 'overbought';
-                if (value < 20) return 'oversold';
-            }
-            // Color moving averages based on price position
-            if (name.toLowerCase().includes('sma') || name.toLowerCase().includes('ema')) {
-                return price > value ? 'positive' : 'negative';
-            }
+        if (name.includes('RSI')) {
+            if (value > 70) return 'overbought';
+            if (value < 30) return 'oversold';
+            return 'neutral';
+        } else if (name.includes('MACD')) {
+            if (value > 0) return 'positive';
+            if (value < 0) return 'negative';
+            return 'neutral';
+        } else if (name.includes('ADX')) {
+            if (value > 25) return 'positive';
+            if (value < 20) return 'negative';
+            return 'neutral';
+        } else if (name.includes('+DI')) {
+            return 'positive';
+        } else if (name.includes('-DI')) {
+            return 'negative';
+        } else if (name.includes('SMA') || name.includes('EMA') || name.includes('VWAP')) {
+            if (price > value) return 'positive';
+            if (price < value) return 'negative';
+            return 'neutral';
+        } else if (name.includes('CMF')) {
+            if (value > 0.05) return 'positive';
+            if (value < -0.05) return 'negative';
+            return 'neutral';
         }
         return 'neutral';
     }
 
-    // Function to create indicator elements
-    function createIndicatorElements(data) {
-        const indicators = [];
-
-        // Add Moving Averages section
-        const maIndicators = [];
-        if (data.sma10 !== null) maIndicators.push({ name: 'SMA10', value: data.sma10 });
-        if (data.sma20 !== null) maIndicators.push({ name: 'SMA20', value: data.sma20 });
-        if (data.sma50 !== null) maIndicators.push({ name: 'SMA50', value: data.sma50 });
-        if (data.sma100 !== null) maIndicators.push({ name: 'SMA100', value: data.sma100 });
-        if (data.sma200 !== null) maIndicators.push({ name: 'SMA200', value: data.sma200 });
-        if (data.ema10 !== null) maIndicators.push({ name: 'EMA10', value: data.ema10 });
-        if (data.ema20 !== null) maIndicators.push({ name: 'EMA20', value: data.ema20 });
-        if (data.ema50 !== null) maIndicators.push({ name: 'EMA50', value: data.ema50 });
-        if (data.ema100 !== null) maIndicators.push({ name: 'EMA100', value: data.ema100 });
-        if (data.ema200 !== null) maIndicators.push({ name: 'EMA200', value: data.ema200 });
-
-        if (maIndicators.length > 0) {
-            indicators.push({
-                type: 'section',
-                title: 'Moving Averages',
-                indicators: maIndicators
-            });
-        }
-
-        // Add Oscillators section
-        const oscillatorIndicators = [];
-        if (data.rsi !== null) oscillatorIndicators.push({ name: 'RSI', value: data.rsi });
-        if (data.macd) {
-            oscillatorIndicators.push({ name: 'MACD', value: data.macd.MACD });
-            oscillatorIndicators.push({ name: 'Signal', value: data.macd.signal });
-            oscillatorIndicators.push({ name: 'Histogram', value: data.macd.histogram });
-        }
-        if (data.stochastic) {
-            oscillatorIndicators.push({ name: 'Stoch K', value: data.stochastic.k });
-            oscillatorIndicators.push({ name: 'Stoch D', value: data.stochastic.d });
-        }
-
-        if (oscillatorIndicators.length > 0) {
-            indicators.push({
-                type: 'section',
-                title: 'Oscillators',
-                indicators: oscillatorIndicators
-            });
-        }
-
-        // Add Trend section
-        const trendIndicators = [];
-        if (data.adx) {
-            trendIndicators.push({ name: 'ADX', value: data.adx.adx });
-            trendIndicators.push({ name: '+DI', value: data.adx.plusDI });
-            trendIndicators.push({ name: '-DI', value: data.adx.minusDI });
-        }
-        if (data.vwap !== null) trendIndicators.push({ name: 'VWAP', value: data.vwap });
-
-        if (trendIndicators.length > 0) {
-            indicators.push({
-                type: 'section',
-                title: 'Trend',
-                indicators: trendIndicators
-            });
-        }
-
-        // Add Volume section
-        const volumeIndicators = [];
-        if (data.obv) {
-            volumeIndicators.push({ name: 'OBV', value: data.obv.obv });
-            volumeIndicators.push({ name: 'OBV SMA', value: data.obv.obvSma });
-        }
-
-        if (volumeIndicators.length > 0) {
-            indicators.push({
-                type: 'section',
-                title: 'Volume',
-                indicators: volumeIndicators
-            });
-        }
-
-        return indicators;
-    }
-
-    // Function to check if EMAs have crossed over
+    // Function to check if EMAs have crossed over (above)
     function checkEMACrossover(ema1, ema2) {
         return ema1 !== null && ema2 !== null && ema1 > ema2;
+    }
+
+    // Function to check if EMAs have crossed over (below)
+    function checkEMABelowCrossover(ema1, ema2) {
+        return ema1 !== null && ema2 !== null && ema1 < ema2;
     }
 
     // Function to check if SMAs have crossed over
@@ -150,16 +86,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return sma1 !== null && sma2 !== null && sma1 > sma2;
     }
 
+    // Function to check if value is within range
+    function isInRange(value, min, max) {
+        return value !== null && value >= min && value <= max;
+    }
+
     // Function to check if timeframe matches filter conditions
     function timeframeMatchesFilters(data) {
         if (!data) return false;
 
-        // Get all checkbox states
+        // Get all filter states
         const ema10_20Checked = ema10_20Checkbox.checked;
+        const ema10_20BelowChecked = ema10_20BelowCheckbox.checked;
         const ema50_200Checked = ema50_200Checkbox.checked;
+        const ema50_200BelowChecked = ema50_200BelowCheckbox.checked;
         const sma50_200Checked = sma50_200Checkbox.checked;
-        const rsiOversoldChecked = rsiOversoldCheckbox.checked;
-        const rsiOverboughtChecked = rsiOverboughtCheckbox.checked;
+        const rsiMin = parseFloat(rsiMinInput.value) || 0;
+        const rsiMax = parseFloat(rsiMaxInput.value) || 100;
+        const stochMin = parseFloat(stochMinInput.value) || 0;
+        const stochMax = parseFloat(stochMaxInput.value) || 100;
         const priceAboveEma10Checked = priceAboveEma10Checkbox.checked;
         const priceAboveEma20Checked = priceAboveEma20Checkbox.checked;
         const priceBelowEma10Checked = priceBelowEma10Checkbox.checked;
@@ -167,14 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const macdHistogramPositiveChecked = macdHistogramPositiveCheckbox.checked;
         const macdHistogramNegativeChecked = macdHistogramNegativeCheckbox.checked;
         const obvPositiveChecked = obvPositiveCheckbox.checked;
+        const obvNegativeChecked = obvNegativeCheckbox.checked;
+        const adxWeakChecked = adxWeakCheckbox.checked;
+        const adxStrongChecked = adxStrongCheckbox.checked;
 
-        // If no filters are checked, show all timeframes
-        if (!ema10_20Checked && !ema50_200Checked && !sma50_200Checked &&
-            !rsiOversoldChecked && !rsiOverboughtChecked &&
+        // If no filters are checked and ranges are at default, show all timeframes
+        if (!ema10_20Checked && !ema10_20BelowChecked &&
+            !ema50_200Checked && !ema50_200BelowChecked &&
+            !sma50_200Checked &&
+            rsiMin === 0 && rsiMax === 100 &&
+            stochMin === 0 && stochMax === 100 &&
             !priceAboveEma10Checked && !priceAboveEma20Checked &&
             !priceBelowEma10Checked && !priceBelowEma20Checked &&
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
-            !obvPositiveChecked) {
+            !obvPositiveChecked && !obvNegativeChecked &&
+            !adxWeakChecked && !adxStrongChecked) {
             return true;
         }
 
@@ -184,8 +136,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ema10_20Checked) {
             matches = matches && checkEMACrossover(data.ema10, data.ema20);
         }
+        if (ema10_20BelowChecked) {
+            matches = matches && checkEMABelowCrossover(data.ema10, data.ema20);
+        }
         if (ema50_200Checked) {
             matches = matches && checkEMACrossover(data.ema50, data.ema200);
+        }
+        if (ema50_200BelowChecked) {
+            matches = matches && checkEMABelowCrossover(data.ema50, data.ema200);
         }
 
         // Check SMA crossovers
@@ -193,12 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
             matches = matches && checkSMACrossover(data.sma50, data.sma200);
         }
 
-        // Check RSI conditions
-        if (rsiOversoldChecked) {
-            matches = matches && data.rsi !== null && data.rsi < 30;
-        }
-        if (rsiOverboughtChecked) {
-            matches = matches && data.rsi !== null && data.rsi > 70;
+        // Check RSI range
+        matches = matches && isInRange(data.rsi, rsiMin, rsiMax);
+
+        // Check Stochastic range
+        if (data.stochastic) {
+            matches = matches && isInRange(data.stochastic.k, stochMin, stochMax);
         }
 
         // Check Price vs EMA conditions
@@ -223,9 +181,20 @@ document.addEventListener('DOMContentLoaded', () => {
             matches = matches && data.macd !== null && data.macd.histogram < 0;
         }
 
-        // Check OBV condition
+        // Check OBV conditions
         if (obvPositiveChecked) {
             matches = matches && data.obv !== null && data.obv.obv > 0;
+        }
+        if (obvNegativeChecked) {
+            matches = matches && data.obv !== null && data.obv.obv < 0;
+        }
+
+        // Check ADX conditions
+        if (adxWeakChecked) {
+            matches = matches && data.adx !== null && data.adx.adx < 20;
+        }
+        if (adxStrongChecked) {
+            matches = matches && data.adx !== null && data.adx.adx > 25;
         }
 
         return matches;
@@ -259,19 +228,166 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add event listeners for all checkboxes and search input
-    const filterElements = [
-        ema10_20Checkbox, ema50_200Checkbox, sma50_200Checkbox,
-        rsiOversoldCheckbox, rsiOverboughtCheckbox,
-        priceAboveEma10Checkbox, priceAboveEma20Checkbox,
-        priceBelowEma10Checkbox, priceBelowEma20Checkbox,
-        macdHistogramPositiveCheckbox, macdHistogramNegativeCheckbox,
-        obvPositiveCheckbox, searchInput
-    ];
+    // Function to create indicator elements
+    function createIndicatorElements(data) {
+        const sections = [];
 
-    filterElements.forEach(element => {
-        element.addEventListener('change', filterSymbols);
-    });
+        // RSI Section
+        if (data.rsi !== null) {
+            sections.push({
+                type: 'section',
+                title: 'RSI',
+                indicators: [{
+                    name: 'RSI',
+                    value: data.rsi,
+                    color: getIndicatorColor('RSI', data.rsi)
+                }]
+            });
+        }
+
+        // MACD Section
+        if (data.macd && data.macd.MACD !== null) {
+            sections.push({
+                type: 'section',
+                title: 'MACD',
+                indicators: [
+                    {
+                        name: 'MACD',
+                        value: data.macd.MACD,
+                        color: getIndicatorColor('MACD', data.macd.MACD)
+                    },
+                    {
+                        name: 'Signal',
+                        value: data.macd.signal,
+                        color: getIndicatorColor('MACD', data.macd.signal)
+                    },
+                    {
+                        name: 'Histogram',
+                        value: data.macd.histogram,
+                        color: getIndicatorColor('MACD', data.macd.histogram)
+                    }
+                ]
+            });
+        }
+
+        // ADX Section
+        if (data.adx && data.adx.adx !== null) {
+            sections.push({
+                type: 'section',
+                title: 'ADX',
+                indicators: [
+                    {
+                        name: 'ADX',
+                        value: data.adx.adx,
+                        color: getIndicatorColor('ADX', data.adx.adx)
+                    },
+                    {
+                        name: '+DI',
+                        value: data.adx.plusDI,
+                        color: getIndicatorColor('+DI', data.adx.plusDI)
+                    },
+                    {
+                        name: '-DI',
+                        value: data.adx.minusDI,
+                        color: getIndicatorColor('-DI', data.adx.minusDI)
+                    }
+                ]
+            });
+        }
+
+        // Moving Averages Section
+        const maIndicators = [];
+        if (data.sma10 !== null) maIndicators.push({ name: 'SMA10', value: data.sma10 });
+        if (data.sma20 !== null) maIndicators.push({ name: 'SMA20', value: data.sma20 });
+        if (data.sma50 !== null) maIndicators.push({ name: 'SMA50', value: data.sma50 });
+        if (data.sma100 !== null) maIndicators.push({ name: 'SMA100', value: data.sma100 });
+        if (data.sma200 !== null) maIndicators.push({ name: 'SMA200', value: data.sma200 });
+        if (data.ema10 !== null) maIndicators.push({ name: 'EMA10', value: data.ema10 });
+        if (data.ema20 !== null) maIndicators.push({ name: 'EMA20', value: data.ema20 });
+        if (data.ema50 !== null) maIndicators.push({ name: 'EMA50', value: data.ema50 });
+        if (data.ema100 !== null) maIndicators.push({ name: 'EMA100', value: data.ema100 });
+        if (data.ema200 !== null) maIndicators.push({ name: 'EMA200', value: data.ema200 });
+        if (data.vwap !== null) maIndicators.push({ name: 'VWAP', value: data.vwap });
+
+        if (maIndicators.length > 0) {
+            sections.push({
+                type: 'section',
+                title: 'Moving Averages',
+                indicators: maIndicators.map(ma => ({
+                    name: ma.name,
+                    value: ma.value,
+                    color: getIndicatorColor(ma.name, ma.value, data.price)
+                }))
+            });
+        }
+
+        // Bollinger Bands Section
+        if (data.bollingerBands && data.bollingerBands.upper !== null) {
+            sections.push({
+                type: 'section',
+                title: 'Bollinger Bands',
+                indicators: [
+                    {
+                        name: 'Upper Band',
+                        value: data.bollingerBands.upper,
+                        color: 'neutral'
+                    },
+                    {
+                        name: 'Middle Band',
+                        value: data.bollingerBands.middle,
+                        color: 'neutral'
+                    },
+                    {
+                        name: 'Lower Band',
+                        value: data.bollingerBands.lower,
+                        color: 'neutral'
+                    }
+                ]
+            });
+        }
+
+        // Fibonacci Section
+        if (data.fibonacci && data.fibonacci.levels) {
+            sections.push({
+                type: 'section',
+                title: 'Fibonacci',
+                indicators: [
+                    { name: '0%', value: data.fibonacci.levels['0'], color: 'neutral' },
+                    { name: '23.6%', value: data.fibonacci.levels['0.236'], color: 'neutral' },
+                    { name: '38.2%', value: data.fibonacci.levels['0.382'], color: 'neutral' },
+                    { name: '50%', value: data.fibonacci.levels['0.5'], color: 'neutral' },
+                    { name: '61.8%', value: data.fibonacci.levels['0.618'], color: 'neutral' },
+                    { name: '100%', value: data.fibonacci.levels['1'], color: 'neutral' }
+                ]
+            });
+        }
+
+        // Volume Section
+        const volumeIndicators = [];
+        if (data.obv && data.obv.obv !== null) {
+            volumeIndicators.push({
+                name: 'OBV',
+                value: data.obv.obv,
+                color: getIndicatorColor('OBV', data.obv.obv)
+            });
+        }
+        if (data.cmf !== null) {
+            volumeIndicators.push({
+                name: 'CMF',
+                value: data.cmf,
+                color: getIndicatorColor('CMF', data.cmf)
+            });
+        }
+        if (volumeIndicators.length > 0) {
+            sections.push({
+                type: 'section',
+                title: 'Volume',
+                indicators: volumeIndicators
+            });
+        }
+
+        return sections;
+    }
 
     // Function to create a symbol card
     function createSymbolCard(symbol, data) {
@@ -441,4 +557,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     };
+
+    // Add event listeners for all filters
+    const filterElements = [
+        ema10_20Checkbox, ema10_20BelowCheckbox,
+        ema50_200Checkbox, ema50_200BelowCheckbox,
+        sma50_200Checkbox,
+        rsiMinInput, rsiMaxInput,
+        stochMinInput, stochMaxInput,
+        priceAboveEma10Checkbox, priceAboveEma20Checkbox,
+        priceBelowEma10Checkbox, priceBelowEma20Checkbox,
+        macdHistogramPositiveCheckbox, macdHistogramNegativeCheckbox,
+        obvPositiveCheckbox, obvNegativeCheckbox,
+        adxWeakCheckbox, adxStrongCheckbox,
+        searchInput
+    ];
+
+    filterElements.forEach(element => {
+        element.addEventListener('change', filterSymbols);
+        element.addEventListener('input', filterSymbols);
+    });
 }); 

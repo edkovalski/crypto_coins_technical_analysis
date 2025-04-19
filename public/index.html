@@ -22,11 +22,19 @@
                     <div class="filter-checkboxes">
                         <label class="filter-checkbox">
                             <input type="checkbox" id="ema10_20_crossover">
-                            <span>10/20 EMA Crossover</span>
+                            <span>10/20 EMA Above Crossover</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="ema10_20_below_crossover">
+                            <span>10/20 EMA Below Crossover</span>
                         </label>
                         <label class="filter-checkbox">
                             <input type="checkbox" id="ema50_200_crossover">
-                            <span>50/200 EMA Crossover</span>
+                            <span>50/200 EMA Above Crossover</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="ema50_200_below_crossover">
+                            <span>50/200 EMA Below Crossover</span>
                         </label>
                         <label class="filter-checkbox">
                             <input type="checkbox" id="sma50_200_crossover">
@@ -36,16 +44,32 @@
                 </div>
 
                 <div class="filter-group">
-                    <h3>RSI Conditions</h3>
-                    <div class="filter-checkboxes">
-                        <label class="filter-checkbox">
-                            <input type="checkbox" id="rsi_oversold">
-                            <span>RSI < 30 (Oversold)</span>
-                        </label>
-                        <label class="filter-checkbox">
-                            <input type="checkbox" id="rsi_overbought">
-                            <span>RSI > 70 (Overbought)</span>
-                        </label>
+                    <h3>RSI Range</h3>
+                    <div class="range-filter">
+                        <div class="range-inputs">
+                            <input type="number" id="rsi_min" min="0" max="100" value="0" placeholder="Min">
+                            <span>to</span>
+                            <input type="number" id="rsi_max" min="0" max="100" value="100" placeholder="Max">
+                        </div>
+                        <div class="range-labels">
+                            <span>0</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Stochastic Range</h3>
+                    <div class="range-filter">
+                        <div class="range-inputs">
+                            <input type="number" id="stoch_min" min="0" max="100" value="0" placeholder="Min">
+                            <span>to</span>
+                            <input type="number" id="stoch_max" min="0" max="100" value="100" placeholder="Max">
+                        </div>
+                        <div class="range-labels">
+                            <span>0</span>
+                            <span>100</span>
+                        </div>
                     </div>
                 </div>
 
@@ -91,6 +115,24 @@
                         <label class="filter-checkbox">
                             <input type="checkbox" id="obv_positive">
                             <span>OBV > 0</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="obv_negative">
+                            <span>OBV < 0</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>ADX Conditions</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="adx_weak">
+                            <span>ADX < 20</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="adx_strong">
+                            <span>ADX > 25</span>
                         </label>
                     </div>
                 </div>
