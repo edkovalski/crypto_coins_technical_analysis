@@ -460,7 +460,7 @@ export const calculateOBV = (data: any[]): { obv: number | null; obvSma: number 
     }
 
     // Calculate 20-period SMA of OBV
-    const obvSma = new SMA({ period: 20, values: obvValues });
+    const obvSma = new SMA({ period: 9, values: obvValues });
     const smaValues = obvSma.getResult();
     const lastSma = smaValues[smaValues.length - 1];
 

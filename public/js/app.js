@@ -20,6 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const obvNegativeCheckbox = document.getElementById('obv_negative');
     const adxWeakCheckbox = document.getElementById('adx_weak');
     const adxStrongCheckbox = document.getElementById('adx_strong');
+    const priceAboveEma50Checkbox = document.getElementById('price_above_ema50');
+    const priceBelowEma50Checkbox = document.getElementById('price_below_ema50');
+    const priceAboveEma100Checkbox = document.getElementById('price_above_ema100');
+    const priceBelowEma100Checkbox = document.getElementById('price_below_ema100');
+    const priceAboveEma200Checkbox = document.getElementById('price_above_ema200');
+    const priceBelowEma200Checkbox = document.getElementById('price_below_ema200');
     let allSymbols = [];
 
     // Function to format indicator value
@@ -113,6 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceAboveEma20Checked = priceAboveEma20Checkbox.checked;
         const priceBelowEma10Checked = priceBelowEma10Checkbox.checked;
         const priceBelowEma20Checked = priceBelowEma20Checkbox.checked;
+        const priceAboveEma50Checked = priceAboveEma50Checkbox.checked;
+        const priceBelowEma50Checked = priceBelowEma50Checkbox.checked;
+        const priceAboveEma100Checked = priceAboveEma100Checkbox.checked;
+        const priceBelowEma100Checked = priceBelowEma100Checkbox.checked;
+        const priceAboveEma200Checked = priceAboveEma200Checkbox.checked;
+        const priceBelowEma200Checked = priceBelowEma200Checkbox.checked;
         const macdHistogramPositiveChecked = macdHistogramPositiveCheckbox.checked;
         const macdHistogramNegativeChecked = macdHistogramNegativeCheckbox.checked;
         const obvPositiveChecked = obvPositiveCheckbox.checked;
@@ -128,6 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
             stochMin === 0 && stochMax === 100 &&
             !priceAboveEma10Checked && !priceAboveEma20Checked &&
             !priceBelowEma10Checked && !priceBelowEma20Checked &&
+            !priceAboveEma50Checked && !priceBelowEma50Checked &&
+            !priceAboveEma100Checked && !priceBelowEma100Checked &&
+            !priceAboveEma200Checked && !priceBelowEma200Checked &&
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
             !obvPositiveChecked && !obvNegativeChecked &&
             !adxWeakChecked && !adxStrongChecked) {
@@ -175,6 +190,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (priceBelowEma20Checked) {
             matches = matches && data.price !== null && data.ema20 !== null && data.price < data.ema20;
+        }
+        if (priceAboveEma50Checked) {
+            matches = matches && data.price !== null && data.ema50 !== null && data.price > data.ema50;
+        }
+        if (priceBelowEma50Checked) {
+            matches = matches && data.price !== null && data.ema50 !== null && data.price < data.ema50;
+        }
+        if (priceAboveEma100Checked) {
+            matches = matches && data.price !== null && data.ema100 !== null && data.price > data.ema100;
+        }
+        if (priceBelowEma100Checked) {
+            matches = matches && data.price !== null && data.ema100 !== null && data.price < data.ema100;
+        }
+        if (priceAboveEma200Checked) {
+            matches = matches && data.price !== null && data.ema200 !== null && data.price > data.ema200;
+        }
+        if (priceBelowEma200Checked) {
+            matches = matches && data.price !== null && data.ema200 !== null && data.price < data.ema200;
         }
 
         // Check MACD conditions
@@ -405,6 +438,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: getIndicatorColor('OBV', data.obv.obv)
             });
         }
+        if (data.obv && data.obv.sma !== null) {
+            volumeIndicators.push({
+                name: 'OBV SMA',
+                value: data.obv.obvSma,
+                color: getIndicatorColor('OBV', data.obv.obvSma)
+            });
+        }
         if (data.cmf !== null) {
             volumeIndicators.push({
                 name: 'CMF',
@@ -601,6 +641,9 @@ document.addEventListener('DOMContentLoaded', () => {
         stochMinInput, stochMaxInput,
         priceAboveEma10Checkbox, priceAboveEma20Checkbox,
         priceBelowEma10Checkbox, priceBelowEma20Checkbox,
+        priceAboveEma50Checkbox, priceBelowEma50Checkbox,
+        priceAboveEma100Checkbox, priceBelowEma100Checkbox,
+        priceAboveEma200Checkbox, priceBelowEma200Checkbox,
         macdHistogramPositiveCheckbox, macdHistogramNegativeCheckbox,
         obvPositiveCheckbox, obvNegativeCheckbox,
         adxWeakCheckbox, adxStrongCheckbox,
