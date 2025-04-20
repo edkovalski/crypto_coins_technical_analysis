@@ -5,14 +5,11 @@ import path from 'path';
 import {
     fetchBinanceSymbols,
     fetchDataForSymbolAndTimeframe,
-
-
     Timeframe,
     createWebSocket,
-
 } from './dataManager';
+import { fetchCandlestickData } from './api';
 import WebSocket from 'ws';
-
 import { createClient } from 'redis';
 import { fetchBinanceExchangeInfo } from './api';
 
@@ -90,6 +87,52 @@ app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction)
     }
 });
 
+// Endpoint to get historical data for backtesting
+app.get('/historical-data/:symbol', (req: Request<{ symbol: string }, any, any, { timestamp: string }>, res: Response, next: NextFunction) => {
+    (async () => {
+        try {
+            const { symbol } = req.params;
+            const timestamp = parseInt(req.query.timestamp);
+
+            if (!timestamp || isNaN(timestamp)) {
+                return res.status(400).json({ error: 'Invalid timestamp' });
+            }
+
+            const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h'];
+            const allTimeframeData = await Promise.all(
+                validTimeframes.map(async (timeframe) => {
+                    try {
+                        // Fetch historical candlestick data with the specified timestamp
+                        const candlestickData = await fetchCandlestickData(symbol, timeframe, timestamp);
+                        if (!candlestickData || candlestickData.length < 2) {
+                            return { timeframe, data: null };
+                        }
+
+                        // Calculate indicators using the historical data
+                        const indicatorData = await fetchDataForSymbolAndTimeframe(symbol, timeframe, candlestickData);
+
+                        // Get the last candle for the price
+                        const lastCandle = candlestickData[candlestickData.length - 1];
+
+                        return {
+                            timeframe,
+                            data: indicatorData,
+                            timestamp: parseInt(lastCandle[0]),
+                            price: parseFloat(lastCandle[4])
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching historical data for ${symbol} ${timeframe}:`, error);
+                        return { timeframe, data: null };
+                    }
+                })
+            );
+
+            res.json(allTimeframeData);
+        } catch (error) {
+            next(error);
+        }
+    })();
+});
 
 // Endpoint to get Greed and Fear Index
 

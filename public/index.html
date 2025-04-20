@@ -16,6 +16,29 @@
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search symbols...">
             </div>
+
+            <div class="backtesting-container">
+                <h3>Backtesting</h3>
+                <div class="backtesting-form">
+                    <div class="form-group">
+                        <label for="backtestSymbol">Symbol:</label>
+                        <input type="text" id="backtestSymbol" placeholder="Enter symbol (e.g., BTCUSDT)">
+                    </div>
+                    <div class="form-group">
+                        <label for="backtestDate">Date:</label>
+                        <input type="date" id="backtestDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="backtestTime">Time:</label>
+                        <input type="time" id="backtestTime">
+                    </div>
+                    <div class="form-actions">
+                        <button id="loadHistoricalData" class="btn-primary">Load Historical Data</button>
+                        <button id="returnToLiveData" class="btn-secondary">Return to Live Data</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="filters-container">
                 <div class="filter-group">
                     <h3>Moving Averages</h3>

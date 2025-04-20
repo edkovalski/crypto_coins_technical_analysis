@@ -654,4 +654,58 @@ document.addEventListener('DOMContentLoaded', () => {
         element.addEventListener('change', filterSymbols);
         element.addEventListener('input', filterSymbols);
     });
+
+    // Backtesting functionality
+    const backtestSymbol = document.getElementById('backtestSymbol');
+    const backtestDate = document.getElementById('backtestDate');
+    const backtestTime = document.getElementById('backtestTime');
+    const loadHistoricalDataBtn = document.getElementById('loadHistoricalData');
+    const returnToLiveDataBtn = document.getElementById('returnToLiveData');
+
+    // Set max date to today
+    const today = new Date();
+    backtestDate.max = today.toISOString().split('T')[0];
+
+    loadHistoricalDataBtn.addEventListener('click', async () => {
+        const symbol = backtestSymbol.value.trim().toUpperCase();
+        if (!symbol) {
+            alert('Please enter a symbol');
+            return;
+        }
+
+        const date = backtestDate.value;
+        const time = backtestTime.value;
+        if (!date || !time) {
+            alert('Please select both date and time');
+            return;
+        }
+
+        const timestamp = new Date(`${date}T${time}`).getTime();
+
+        try {
+            document.body.classList.add('historical-mode');
+            const response = await fetch(`/historical-data/${symbol}?timestamp=${timestamp}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch historical data');
+            }
+            const data = await response.json();
+
+            // Clear existing symbols
+            const symbolsContainer = document.getElementById('symbolsContainer');
+            symbolsContainer.innerHTML = '';
+
+            // Create and display the historical data
+            const symbolCard = createSymbolCard(symbol, data);
+            symbolsContainer.appendChild(symbolCard);
+
+        } catch (error) {
+            console.error('Error loading historical data:', error);
+            alert('Failed to load historical data. Please try again.');
+        }
+    });
+
+    returnToLiveDataBtn.addEventListener('click', () => {
+        document.body.classList.remove('historical-mode');
+        fetchAndDisplaySymbols();
+    });
 }); 

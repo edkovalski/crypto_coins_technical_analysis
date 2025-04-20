@@ -70,7 +70,7 @@ const retryWithDelay = async <T>(fn: () => Promise<T>, retries = MAX_RETRIES): P
                 const data = error.response?.data;
                 console.error(`Status: ${status}`);
                 console.error(`Response: ${JSON.stringify(data)}`);
-                
+
                 // Handle geographical restriction
                 if (data?.code === 0 && data?.msg?.includes('Service unavailable from a restricted location')) {
                     console.error(`
@@ -83,7 +83,7 @@ For more information, visit: https://www.binance.com/en/terms
 `);
                     return null;
                 }
-                
+
                 // Handle rate limits
                 if (status === 429) { // Rate limit exceeded
                     const retryAfter = parseInt(error.response?.headers['retry-after'] || '5', 10);
@@ -91,17 +91,17 @@ For more information, visit: https://www.binance.com/en/terms
                     await sleep(retryAfter * 1000);
                     return retryWithDelay(fn, retries); // Don't decrement retries for rate limits
                 }
-                
+
                 if (status === 418) { // IP ban
                     console.error('IP has been auto-banned for repeated violations');
                     return null;
                 }
             }
         }
-        
+
         if (retries > 0) {
             const delay = RETRY_DELAY * (MAX_RETRIES - retries + 1);
-            console.log(`Retrying... ${retries} attempts left (waiting ${delay/1000}s)`);
+            console.log(`Retrying... ${retries} attempts left (waiting ${delay / 1000}s)`);
             await sleep(delay);
             return retryWithDelay(fn, retries - 1);
         }
@@ -122,7 +122,7 @@ export interface BinanceExchangeInfo {
 
 export const fetchGreedAndFearIndex = async (): Promise<number | null> => {
     try {
-        const response = await retryWithDelay(() => 
+        const response = await retryWithDelay(() =>
             axiosInstance.get('https://api.alternative.me/fng/', {
                 timeout: TIMEOUT
             })
@@ -142,14 +142,14 @@ export const fetchGreedAndFearIndex = async (): Promise<number | null> => {
 
 export const fetchBinanceExchangeInfo = async (): Promise<BinanceExchangeInfo | null> => {
     try {
-        const response = await retryWithDelay(() => 
+        const response = await retryWithDelay(() =>
             axiosInstance.get(`${BASE_URL}/exchangeInfo`, {
                 timeout: TIMEOUT
             })
         );
-        
+
         if (!response) return null;
-        
+
         const exchangeInfo: BinanceExchangeInfo = response.data;
         if (!exchangeInfo || !exchangeInfo.symbols) {
             console.error('Invalid exchange info format');
@@ -157,7 +157,7 @@ export const fetchBinanceExchangeInfo = async (): Promise<BinanceExchangeInfo | 
         }
 
         // Filter out USDCUSDT and USDPUSDT
-        const excludedSymbols = ['USDCUSDT', 'USDPUSDT', 'EURUSDT', 'EURIUSDT','FDUSDUSDT', 'XUSDUSDT'];
+        const excludedSymbols = ['USDCUSDT', 'USDPUSDT', 'EURUSDT', 'EURIUSDT', 'FDUSDUSDT', 'XUSDUSDT'];
         exchangeInfo.symbols = exchangeInfo.symbols.filter(symbolInfo => !excludedSymbols.includes(symbolInfo.symbol));
 
         return exchangeInfo;
@@ -167,21 +167,28 @@ export const fetchBinanceExchangeInfo = async (): Promise<BinanceExchangeInfo | 
     }
 };
 
-export const fetchCandlestickData = async (symbol: string, interval: string) => {
+export const fetchCandlestickData = async (symbol: string, interval: string, endTime?: number) => {
     try {
-        const response = await retryWithDelay(() => 
+        const params: any = {
+            symbol,
+            interval: `${interval}`,
+            limit: 300,
+        };
+
+        // Add endTime parameter if provided (for historical data)
+        if (endTime) {
+            params.endTime = endTime;
+        }
+
+        const response = await retryWithDelay(() =>
             axiosInstance.get(`${BASE_URL}/klines`, {
-                params: {
-                    symbol,
-                    interval: `${interval}`,
-                    limit: 300,
-                },
+                params,
                 timeout: TIMEOUT
             })
         );
-        
+
         if (!response) return null;
-        
+
         if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
             console.error(`Invalid candlestick data for ${symbol}:`, response.data);
             return null;

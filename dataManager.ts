@@ -122,9 +122,10 @@ export const fetchBinanceSymbols = async (): Promise<string[]> => {
     }
 };
 
-export const fetchDataForSymbolAndTimeframe = async (symbol: string, timeframe: Timeframe): Promise<RSIData> => {
+export const fetchDataForSymbolAndTimeframe = async (symbol: string, timeframe: Timeframe, historicalData?: any[]): Promise<RSIData> => {
     try {
-        const candlestickData = await fetchCandlestickData(symbol, timeframe);
+        // Use provided historical data or fetch new data
+        const candlestickData = historicalData || await fetchCandlestickData(symbol, timeframe);
         if (!candlestickData || candlestickData.length < 2) {
             throw new Error('Insufficient candlestick data');
         }
@@ -231,58 +232,8 @@ export const fetchDataForSymbolAndTimeframe = async (symbol: string, timeframe: 
             stochastic
         };
     } catch (error) {
-        console.error(`Error fetching data for ${symbol}:`, error);
-        return {
-            symbol,
-            rsi: null,
-            macd: { MACD: null, signal: null, histogram: null },
-            sma10: null,
-            sma20: null,
-            sma50: null,
-            sma100: null,
-            sma200: null,
-            isCrossoverSMA2050: null,
-            isCrossoverSMA50200: null,
-            moving_averages: 0,
-            oscillators: 0,
-            ema10: null,
-            ema20: null,
-            ema50: null,
-            ema100: null,
-            ema200: null,
-            isCrossoverEMA2050: null,
-            isCrossoverEMA50200: null,
-            price: null,
-            timeframe,
-            adx: { adx: null, plusDI: null, minusDI: null },
-            vwap: null,
-            bollingerBands: { upper: null, middle: null, lower: null },
-            obv: { obv: null, obvSma: null },
-            fibonacci: {
-                levels: {
-                    '0': null,
-                    '0.236': null,
-                    '0.382': null,
-                    '0.5': null,
-                    '0.618': null,
-                    '0.786': null,
-                    '1': null
-                },
-                high: null,
-                low: null
-            },
-            cmf: null,
-            ichimoku: {
-                conversion: null,
-                base: null,
-                spanA: null,
-                spanB: null,
-                leadingSpanA: null,
-                leadingSpanB: null
-            },
-            atr: null,
-            stochastic: { k: null, d: null }
-        };
+        console.error(`Error fetching data for ${symbol} ${timeframe}:`, error);
+        throw error;
     }
 };
 
