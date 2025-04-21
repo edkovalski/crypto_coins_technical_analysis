@@ -47,38 +47,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return value;
     }
 
-    // Function to get indicator color based on value
-    function getIndicatorColor(name, value, price) {
-        if (name.includes('RSI')) {
-            if (value > 70) return 'overbought';
-            if (value < 30) return 'oversold';
-            return 'neutral';
-        } else if (name.includes('MACD')) {
-            if (value > 0) return 'positive';
-            if (value < 0) return 'negative';
-            return 'neutral';
-        } else if (name.includes('ADX')) {
-            if (value > 25) return 'positive';
-            if (value < 20) return 'negative';
-            return 'neutral';
-        } else if (name.includes('+DI')) {
-            return 'positive';
-        } else if (name.includes('-DI')) {
-            return 'negative';
-        } else if (name.includes('SMA') || name.includes('EMA') || name.includes('VWAP')) {
-            if (price > value) return 'positive';
-            if (price < value) return 'negative';
-            return 'neutral';
-        } else if (name.includes('CMF')) {
-            if (value > 0.05) return 'positive';
-            if (value < -0.05) return 'negative';
-            return 'neutral';
-        } else if (name.includes('Ichimoku')) {
-            if (price > value) return 'positive';
-            if (price < value) return 'negative';
-            return 'neutral';
+    // Function to get color based on indicator value
+    function getIndicatorColor(indicator, value) {
+        switch (indicator) {
+            case 'RSI':
+                if (value > 70) return 'negative';
+                if (value < 30) return 'positive';
+                return 'neutral';
+            case 'MACD':
+                return value > 0 ? 'positive' : 'negative';
+            case 'Stochastic':
+                if (value > 80) return 'negative';
+                if (value < 20) return 'positive';
+                return 'neutral';
+            case 'ADX':
+                if (value > 25) return 'positive';
+                return 'neutral';
+            case 'ATR':
+                return 'neutral';
+            default:
+                return 'neutral';
         }
-        return 'neutral';
     }
 
     // Function to check if EMAs have crossed over (above)
@@ -307,6 +296,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Stochastic Oscillator Section
+        if (data.stochastic && data.stochastic.k !== null) {
+            sections.push({
+                type: 'section',
+                title: 'Stochastic',
+                indicators: [
+                    {
+                        name: '%K',
+                        value: data.stochastic.k,
+                        color: getIndicatorColor('Stochastic', data.stochastic.k)
+                    },
+                    {
+                        name: '%D',
+                        value: data.stochastic.d,
+                        color: getIndicatorColor('Stochastic', data.stochastic.d)
+                    }
+                ]
+            });
+        }
+
         // ADX Section
         if (data.adx && data.adx.adx !== null) {
             sections.push({
@@ -353,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 indicators: maIndicators.map(ma => ({
                     name: ma.name,
                     value: ma.value,
-                    color: getIndicatorColor(ma.name, ma.value, data.price)
+                    color: getIndicatorColor(ma.name, ma.value)
                 }))
             });
         }
@@ -408,22 +417,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         name: 'Conversion Line',
                         value: data.ichimoku.conversion,
-                        color: getIndicatorColor('Ichimoku', data.ichimoku.conversion, data.price)
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.conversion)
                     },
                     {
                         name: 'Base Line',
                         value: data.ichimoku.base,
-                        color: getIndicatorColor('Ichimoku', data.ichimoku.base, data.price)
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.base)
                     },
                     {
                         name: 'Leading Span A',
                         value: data.ichimoku.spanA,
-                        color: getIndicatorColor('Ichimoku', data.ichimoku.spanA, data.price)
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.spanA)
                     },
                     {
                         name: 'Leading Span B',
                         value: data.ichimoku.spanB,
-                        color: getIndicatorColor('Ichimoku', data.ichimoku.spanB, data.price)
+                        color: getIndicatorColor('Ichimoku', data.ichimoku.spanB)
                     }
                 ]
             });
@@ -520,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     section.indicators.forEach(indicator => {
                         const indicatorElement = document.createElement('div');
-                        indicatorElement.className = `indicator ${getIndicatorColor(indicator.name, indicator.value, item.data.price)}`;
+                        indicatorElement.className = `indicator ${getIndicatorColor(indicator.name, indicator.value)}`;
 
                         const indicatorName = document.createElement('span');
                         indicatorName.className = 'indicator-name';
