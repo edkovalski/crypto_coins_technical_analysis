@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceBelowEma100Checkbox = document.getElementById('price_below_ema100');
     const priceAboveEma200Checkbox = document.getElementById('price_above_ema200');
     const priceBelowEma200Checkbox = document.getElementById('price_below_ema200');
+    const resetFiltersBtn = document.getElementById('resetFilters');
     let allSymbols = [];
 
     // Function to format indicator value
@@ -717,4 +718,45 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.remove('historical-mode');
         fetchAndDisplaySymbols();
     });
+
+    // Function to reset all filters
+    function resetAllFilters() {
+        // Reset checkboxes
+        ema10_20Checkbox.checked = false;
+        ema10_20BelowCheckbox.checked = false;
+        ema50_200Checkbox.checked = false;
+        ema50_200BelowCheckbox.checked = false;
+        sma50_200Checkbox.checked = false;
+        priceAboveEma10Checkbox.checked = false;
+        priceAboveEma20Checkbox.checked = false;
+        priceBelowEma10Checkbox.checked = false;
+        priceBelowEma20Checkbox.checked = false;
+        priceAboveEma50Checkbox.checked = false;
+        priceBelowEma50Checkbox.checked = false;
+        priceAboveEma100Checkbox.checked = false;
+        priceBelowEma100Checkbox.checked = false;
+        priceAboveEma200Checkbox.checked = false;
+        priceBelowEma200Checkbox.checked = false;
+        macdHistogramPositiveCheckbox.checked = false;
+        macdHistogramNegativeCheckbox.checked = false;
+        obvPositiveCheckbox.checked = false;
+        obvNegativeCheckbox.checked = false;
+        adxWeakCheckbox.checked = false;
+        adxStrongCheckbox.checked = false;
+
+        // Reset range inputs
+        rsiMinInput.value = 0;
+        rsiMaxInput.value = 100;
+        stochMinInput.value = 0;
+        stochMaxInput.value = 100;
+
+        // Reset search input
+        searchInput.value = '';
+
+        // Apply filters to show all symbols
+        filterSymbols();
+    }
+
+    // Add event listener for reset filters button
+    resetFiltersBtn.addEventListener('click', resetAllFilters);
 }); 
