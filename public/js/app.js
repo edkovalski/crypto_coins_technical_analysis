@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rsiMaxInput = document.getElementById('rsi_max');
     const stochMinInput = document.getElementById('stoch_min');
     const stochMaxInput = document.getElementById('stoch_max');
+    const atrMinInput = document.getElementById('atr_min');
+    const atrMaxInput = document.getElementById('atr_max');
     const priceAboveEma10Checkbox = document.getElementById('price_above_ema10');
     const priceAboveEma20Checkbox = document.getElementById('price_above_ema20');
     const priceBelowEma10Checkbox = document.getElementById('price_below_ema10');
@@ -105,6 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const rsiMax = parseFloat(rsiMaxInput.value) || 100;
         const stochMin = parseFloat(stochMinInput.value) || 0;
         const stochMax = parseFloat(stochMaxInput.value) || 100;
+        const atrMin = parseFloat(atrMinInput.value) || 0;
+        const atrMax = parseFloat(atrMaxInput.value) || 1000;
         const priceAboveEma10Checked = priceAboveEma10Checkbox.checked;
         const priceAboveEma20Checked = priceAboveEma20Checkbox.checked;
         const priceBelowEma10Checked = priceBelowEma10Checkbox.checked;
@@ -128,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             !sma50_200Checked &&
             rsiMin === 0 && rsiMax === 100 &&
             stochMin === 0 && stochMax === 100 &&
+            atrMin === 0 && atrMax === 1000 &&
             !priceAboveEma10Checked && !priceAboveEma20Checked &&
             !priceBelowEma10Checked && !priceBelowEma20Checked &&
             !priceAboveEma50Checked && !priceBelowEma50Checked &&
@@ -222,6 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (adxStrongChecked) {
             matches = matches && data.adx !== null && data.adx.adx > 25;
+        }
+
+        // Check ATR range
+        if (data.atr !== null) {
+            matches = matches && isInRange(data.atr, atrMin, atrMax);
         }
 
         return matches;
@@ -470,6 +480,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // ATR Section
+        if (data.atr !== null) {
+            sections.push({
+                type: 'section',
+                title: 'Volatility',
+                indicators: [{
+                    name: 'ATR',
+                    value: data.atr,
+                    color: getIndicatorColor('ATR', data.atr)
+                }]
+            });
+        }
+
         return sections;
     }
 
@@ -649,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sma50_200Checkbox,
         rsiMinInput, rsiMaxInput,
         stochMinInput, stochMaxInput,
+        atrMinInput, atrMaxInput,
         priceAboveEma10Checkbox, priceAboveEma20Checkbox,
         priceBelowEma10Checkbox, priceBelowEma20Checkbox,
         priceAboveEma50Checkbox, priceBelowEma50Checkbox,
@@ -749,6 +773,8 @@ document.addEventListener('DOMContentLoaded', () => {
         rsiMaxInput.value = 100;
         stochMinInput.value = 0;
         stochMaxInput.value = 100;
+        atrMinInput.value = 0;
+        atrMaxInput.value = 1000;
 
         // Reset search input
         searchInput.value = '';
