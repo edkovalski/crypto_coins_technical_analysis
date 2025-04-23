@@ -118,13 +118,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceAboveEma100Checked = priceAboveEma100Checkbox.checked;
         const priceBelowEma100Checked = priceBelowEma100Checkbox.checked;
         const priceAboveEma200Checked = priceAboveEma200Checkbox.checked;
-        const priceBelowEma200Checked = priceBelowEma200Checkbox.checked;
+        const priceBelowEma200Checkbox = priceBelowEma200Checkbox.checked;
         const macdHistogramPositiveChecked = macdHistogramPositiveCheckbox.checked;
         const macdHistogramNegativeChecked = macdHistogramNegativeCheckbox.checked;
         const obvPositiveChecked = obvPositiveCheckbox.checked;
         const obvNegativeChecked = obvNegativeCheckbox.checked;
         const adxWeakChecked = adxWeakCheckbox.checked;
         const adxStrongChecked = adxStrongCheckbox.checked;
+
+        // Get timeframe filter states
+        const timeframe1mChecked = document.getElementById('timeframe_1m').checked;
+        const timeframe5mChecked = document.getElementById('timeframe_5m').checked;
+        const timeframe15mChecked = document.getElementById('timeframe_15m').checked;
+        const timeframe30mChecked = document.getElementById('timeframe_30m').checked;
+        const timeframe1hChecked = document.getElementById('timeframe_1h').checked;
+        const timeframe4hChecked = document.getElementById('timeframe_4h').checked;
+        const timeframe1dChecked = document.getElementById('timeframe_1d').checked;
 
         // If no filters are checked and ranges are at default, show all timeframes
         if (!ema10_20Checked && !ema10_20BelowChecked &&
@@ -137,14 +146,31 @@ document.addEventListener('DOMContentLoaded', () => {
             !priceBelowEma10Checked && !priceBelowEma20Checked &&
             !priceAboveEma50Checked && !priceBelowEma50Checked &&
             !priceAboveEma100Checked && !priceBelowEma100Checked &&
-            !priceAboveEma200Checked && !priceBelowEma200Checked &&
+            !priceAboveEma200Checked && !priceBelowEma200Checkbox.checked &&
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
             !obvPositiveChecked && !obvNegativeChecked &&
-            !adxWeakChecked && !adxStrongChecked) {
+            !adxWeakChecked && !adxStrongChecked &&
+            !timeframe1mChecked && !timeframe5mChecked && !timeframe15mChecked &&
+            !timeframe30mChecked && !timeframe1hChecked && !timeframe4hChecked && !timeframe1dChecked) {
             return true;
         }
 
         let matches = true;
+
+        // Check timeframe filters
+        const timeframe = data.timeframe;
+        if (timeframe1mChecked || timeframe5mChecked || timeframe15mChecked ||
+            timeframe30mChecked || timeframe1hChecked || timeframe4hChecked || timeframe1dChecked) {
+            matches = matches && (
+                (timeframe === '1m' && timeframe1mChecked) ||
+                (timeframe === '5m' && timeframe5mChecked) ||
+                (timeframe === '15m' && timeframe15mChecked) ||
+                (timeframe === '30m' && timeframe30mChecked) ||
+                (timeframe === '1h' && timeframe1hChecked) ||
+                (timeframe === '4h' && timeframe4hChecked) ||
+                (timeframe === '1d' && timeframe1dChecked)
+            );
+        }
 
         // Check EMA crossovers
         if (ema10_20Checked) {
@@ -767,6 +793,15 @@ document.addEventListener('DOMContentLoaded', () => {
         obvNegativeCheckbox.checked = false;
         adxWeakCheckbox.checked = false;
         adxStrongCheckbox.checked = false;
+
+        // Reset timeframe checkboxes
+        document.getElementById('timeframe_1m').checked = false;
+        document.getElementById('timeframe_5m').checked = false;
+        document.getElementById('timeframe_15m').checked = false;
+        document.getElementById('timeframe_30m').checked = false;
+        document.getElementById('timeframe_1h').checked = false;
+        document.getElementById('timeframe_4h').checked = false;
+        document.getElementById('timeframe_1d').checked = false;
 
         // Reset range inputs
         rsiMinInput.value = 0;

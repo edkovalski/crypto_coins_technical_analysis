@@ -61,7 +61,7 @@ app.get('/symbols', async (req: Request, res: Response, next: NextFunction) => {
 app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { symbol } = req.params;
-        const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h'];
+        const validTimeframes: Timeframe[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
         const allTimeframeData = await Promise.all(
             validTimeframes.map(async (timeframe) => {
                 const cachedData = await redisClient.get(`indicator:${symbol}:${timeframe}`);
@@ -98,7 +98,7 @@ app.get('/historical-data/:symbol', (req: Request<{ symbol: string }, any, any, 
                 return res.status(400).json({ error: 'Invalid timestamp' });
             }
 
-            const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h'];
+            const validTimeframes: Timeframe[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
             const allTimeframeData = await Promise.all(
                 validTimeframes.map(async (timeframe) => {
                     try {
