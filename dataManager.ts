@@ -74,9 +74,9 @@ export interface RSIData {
     };
 }
 
-export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
+export type Timeframe = '15m' | '30m' | '1h' | '4h' | '1d';
 
-export const ALL_TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '30m', '1h', '4h', '1d'];
+export const ALL_TIMEFRAMES: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
 
 type WsWebSocket = WebSocket;
 

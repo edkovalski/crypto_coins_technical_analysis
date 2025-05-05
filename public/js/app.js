@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const ema10_20Checkbox = document.getElementById('ema10_20_crossover');
     const ema10_20BelowCheckbox = document.getElementById('ema10_20_below_crossover');
+    const ema20_50Checkbox = document.getElementById('ema20_50_crossover');
+    const ema20_50BelowCheckbox = document.getElementById('ema20_50_below_crossover');
     const ema50_200Checkbox = document.getElementById('ema50_200_crossover');
     const ema50_200BelowCheckbox = document.getElementById('ema50_200_below_crossover');
     const sma50_200Checkbox = document.getElementById('sma50_200_crossover');
@@ -100,6 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get all filter states
         const ema10_20Checked = ema10_20Checkbox.checked;
         const ema10_20BelowChecked = ema10_20BelowCheckbox.checked;
+        const ema20_50Checked = ema20_50Checkbox.checked;
+        const ema20_50BelowChecked = ema20_50BelowCheckbox.checked;
         const ema50_200Checked = ema50_200Checkbox.checked;
         const ema50_200BelowChecked = ema50_200BelowCheckbox.checked;
         const sma50_200Checked = sma50_200Checkbox.checked;
@@ -118,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceAboveEma100Checked = priceAboveEma100Checkbox.checked;
         const priceBelowEma100Checked = priceBelowEma100Checkbox.checked;
         const priceAboveEma200Checked = priceAboveEma200Checkbox.checked;
-        const priceBelowEma200Checkbox = priceBelowEma200Checkbox.checked;
+        const priceBelowEma200Checked = priceBelowEma200Checkbox.checked;
         const macdHistogramPositiveChecked = macdHistogramPositiveCheckbox.checked;
         const macdHistogramNegativeChecked = macdHistogramNegativeCheckbox.checked;
         const obvPositiveChecked = obvPositiveCheckbox.checked;
@@ -127,16 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const adxStrongChecked = adxStrongCheckbox.checked;
 
         // Get timeframe filter states
-        const timeframe1mChecked = document.getElementById('timeframe_1m').checked;
-        const timeframe5mChecked = document.getElementById('timeframe_5m').checked;
-        const timeframe15mChecked = document.getElementById('timeframe_15m').checked;
-        const timeframe30mChecked = document.getElementById('timeframe_30m').checked;
-        const timeframe1hChecked = document.getElementById('timeframe_1h').checked;
-        const timeframe4hChecked = document.getElementById('timeframe_4h').checked;
-        const timeframe1dChecked = document.getElementById('timeframe_1d').checked;
+        const timeframe15mChecked = document.getElementById('timeframe_15m')?.checked || false;
+        const timeframe30mChecked = document.getElementById('timeframe_30m')?.checked || false;
+        const timeframe1hChecked = document.getElementById('timeframe_1h')?.checked || false;
+        const timeframe4hChecked = document.getElementById('timeframe_4h')?.checked || false;
+        const timeframe1dChecked = document.getElementById('timeframe_1d')?.checked || false;
 
         // If no filters are checked and ranges are at default, show all timeframes
         if (!ema10_20Checked && !ema10_20BelowChecked &&
+            !ema20_50Checked && !ema20_50BelowChecked &&
             !ema50_200Checked && !ema50_200BelowChecked &&
             !sma50_200Checked &&
             rsiMin === 0 && rsiMax === 100 &&
@@ -146,12 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
             !priceBelowEma10Checked && !priceBelowEma20Checked &&
             !priceAboveEma50Checked && !priceBelowEma50Checked &&
             !priceAboveEma100Checked && !priceBelowEma100Checked &&
-            !priceAboveEma200Checked && !priceBelowEma200Checkbox.checked &&
+            !priceAboveEma200Checked && !priceBelowEma200Checked &&
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
             !obvPositiveChecked && !obvNegativeChecked &&
             !adxWeakChecked && !adxStrongChecked &&
-            !timeframe1mChecked && !timeframe5mChecked && !timeframe15mChecked &&
-            !timeframe30mChecked && !timeframe1hChecked && !timeframe4hChecked && !timeframe1dChecked) {
+            !timeframe15mChecked && !timeframe30mChecked && !timeframe1hChecked && 
+            !timeframe4hChecked && !timeframe1dChecked) {
             return true;
         }
 
@@ -159,11 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check timeframe filters
         const timeframe = data.timeframe;
-        if (timeframe1mChecked || timeframe5mChecked || timeframe15mChecked ||
-            timeframe30mChecked || timeframe1hChecked || timeframe4hChecked || timeframe1dChecked) {
+        if (timeframe15mChecked || timeframe30mChecked || timeframe1hChecked ||
+            timeframe4hChecked || timeframe1dChecked) {
             matches = matches && (
-                (timeframe === '1m' && timeframe1mChecked) ||
-                (timeframe === '5m' && timeframe5mChecked) ||
                 (timeframe === '15m' && timeframe15mChecked) ||
                 (timeframe === '30m' && timeframe30mChecked) ||
                 (timeframe === '1h' && timeframe1hChecked) ||
@@ -178,6 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (ema10_20BelowChecked) {
             matches = matches && checkEMABelowCrossover(data.ema10, data.ema20);
+        }
+        if (ema20_50Checked) {
+            matches = matches && checkEMACrossover(data.ema20, data.ema50);
+        }
+        if (ema20_50BelowChecked) {
+            matches = matches && checkEMABelowCrossover(data.ema20, data.ema50);
         }
         if (ema50_200Checked) {
             matches = matches && checkEMACrossover(data.ema50, data.ema200);
@@ -694,6 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listeners for all filters
     const filterElements = [
         ema10_20Checkbox, ema10_20BelowCheckbox,
+        ema20_50Checkbox, ema20_50BelowCheckbox,
         ema50_200Checkbox, ema50_200BelowCheckbox,
         sma50_200Checkbox,
         rsiMinInput, rsiMaxInput,
@@ -774,6 +782,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset checkboxes
         ema10_20Checkbox.checked = false;
         ema10_20BelowCheckbox.checked = false;
+        ema20_50Checkbox.checked = false;
+        ema20_50BelowCheckbox.checked = false;
         ema50_200Checkbox.checked = false;
         ema50_200BelowCheckbox.checked = false;
         sma50_200Checkbox.checked = false;
