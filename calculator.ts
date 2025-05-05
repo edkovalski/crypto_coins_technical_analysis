@@ -69,7 +69,17 @@ export const calculateRSIForSymbol = (data: any[]) => {
 
 export const calculateMACDForSymbol = (data: any[]) => {
     if (!data || data.length === 0) {
-        return { MACD: null, signal: null, histogram: null }; // Return null values if data is null or empty
+        return { 
+            MACD: null, 
+            signal: null, 
+            histogram: null,
+            previousMACD1: null,
+            previousSignal1: null,
+            previousHistogram1: null,
+            previousMACD2: null,
+            previousSignal2: null,
+            previousHistogram2: null
+        }; // Return null values if data is null or empty
     }
     const closePrices = data.map((item) => {
         if (Array.isArray(item) && item.length >= 6) {
@@ -91,7 +101,17 @@ export const calculateMACDForSymbol = (data: any[]) => {
 
     if (validClosePrices.length < 35) {
         console.warn('Not enough valid data points for MACD calculation');
-        return { MACD: null, signal: null, histogram: null }; // Return null if not enough valid data points
+        return { 
+            MACD: null, 
+            signal: null, 
+            histogram: null,
+            previousMACD1: null,
+            previousSignal1: null,
+            previousHistogram1: null,
+            previousMACD2: null,
+            previousSignal2: null,
+            previousHistogram2: null
+        }; // Return null if not enough valid data points
     }
 
     const macd = new MACD({
@@ -103,11 +123,21 @@ export const calculateMACDForSymbol = (data: any[]) => {
         SimpleMASignal: false,
     });
     const macdValues = macd.getResult();
-    const lastMacd = macdValues[macdValues.length - 1];
+    const lastIndex = macdValues.length - 1;
+    const lastMacd = macdValues[lastIndex];
+    const previousMacd1 = lastIndex > 0 ? macdValues[lastIndex - 1] : null;
+    const previousMacd2 = lastIndex > 1 ? macdValues[lastIndex - 2] : null;
+    
     return {
         MACD: lastMacd?.MACD || null,
         signal: lastMacd?.signal || null,
         histogram: lastMacd?.histogram || null,
+        previousMACD1: previousMacd1?.MACD || null,
+        previousSignal1: previousMacd1?.signal || null,
+        previousHistogram1: previousMacd1?.histogram || null,
+        previousMACD2: previousMacd2?.MACD || null,
+        previousSignal2: previousMacd2?.signal || null,
+        previousHistogram2: previousMacd2?.histogram || null,
     };
 };
 

@@ -167,7 +167,7 @@ export const fetchBinanceExchangeInfo = async (): Promise<BinanceExchangeInfo | 
     }
 };
 
-export const fetchCandlestickData = async (symbol: string, interval: string, endTime?: number) => {
+export const fetchCandlestickData = async (symbol: string, interval: string, startTime?: number, endTime?: number) => {
     try {
         const params: any = {
             symbol,
@@ -175,7 +175,10 @@ export const fetchCandlestickData = async (symbol: string, interval: string, end
             limit: 300,
         };
 
-        // Add endTime parameter if provided (for historical data)
+        // Add time parameters if provided (for historical data)
+        if (startTime) {
+            params.startTime = startTime;
+        }
         if (endTime) {
             params.endTime = endTime;
         }

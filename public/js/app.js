@@ -317,26 +317,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // MACD Section
         if (data.macd && data.macd.MACD !== null) {
+            const macdIndicators = [
+                {
+                    name: 'MACD',
+                    value: data.macd.MACD,
+                    color: getIndicatorColor('MACD', data.macd.MACD)
+                },
+                {
+                    name: 'Signal',
+                    value: data.macd.signal,
+                    color: getIndicatorColor('MACD', data.macd.signal)
+                },
+                {
+                    name: 'Histogram',
+                    value: data.macd.histogram,
+                    color: getIndicatorColor('MACD', data.macd.histogram)
+                }
+            ];
+            
+            // Add previous interval MACD data if available
+            if (data.macd.previousMACD1 !== null) {
+                macdIndicators.push(
+                    {
+                        name: 'MACD (prev)',
+                        value: data.macd.previousMACD1,
+                        color: getIndicatorColor('MACD', data.macd.previousMACD1)
+                    },
+                    {
+                        name: 'Signal (prev)',
+                        value: data.macd.previousSignal1,
+                        color: getIndicatorColor('MACD', data.macd.previousSignal1)
+                    },
+                    {
+                        name: 'Hist (prev)',
+                        value: data.macd.previousHistogram1,
+                        color: getIndicatorColor('MACD', data.macd.previousHistogram1)
+                    }
+                );
+            }
+            
+            // Add second previous interval MACD data if available
+            if (data.macd.previousMACD2 !== null) {
+                macdIndicators.push(
+                    {
+                        name: 'MACD (prev2)',
+                        value: data.macd.previousMACD2,
+                        color: getIndicatorColor('MACD', data.macd.previousMACD2)
+                    },
+                    {
+                        name: 'Signal (prev2)',
+                        value: data.macd.previousSignal2,
+                        color: getIndicatorColor('MACD', data.macd.previousSignal2)
+                    },
+                    {
+                        name: 'Hist (prev2)',
+                        value: data.macd.previousHistogram2,
+                        color: getIndicatorColor('MACD', data.macd.previousHistogram2)
+                    }
+                );
+            }
+            
             sections.push({
                 type: 'section',
                 title: 'MACD',
-                indicators: [
-                    {
-                        name: 'MACD',
-                        value: data.macd.MACD,
-                        color: getIndicatorColor('MACD', data.macd.MACD)
-                    },
-                    {
-                        name: 'Signal',
-                        value: data.macd.signal,
-                        color: getIndicatorColor('MACD', data.macd.signal)
-                    },
-                    {
-                        name: 'Histogram',
-                        value: data.macd.histogram,
-                        color: getIndicatorColor('MACD', data.macd.histogram)
-                    }
-                ]
+                indicators: macdIndicators
             });
         }
 
@@ -605,8 +649,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     indicators.appendChild(sectionElement);
                 });
 
+                // Add chart container
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'chart-container';
+                const canvas = document.createElement('canvas');
+                chartContainer.appendChild(canvas);
+                
                 timeframeItem.appendChild(indicators);
+                timeframeItem.appendChild(chartContainer);
                 timeframeData.appendChild(timeframeItem);
+                
+                // Create chart (will be populated with data later)
+                createChart(canvas, symbol, item.timeframe);
             }
         });
 
@@ -638,6 +692,40 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error(`Error fetching data for ${symbol}:`, error);
             return null;
+        }
+    }
+    
+    // Function to fetch historical price data for charts
+    async function fetchHistoricalPriceData(symbol, timeframe) {
+        try {
+            // Get current time
+            const now = new Date();
+            // Calculate start time (7 days ago for daily, 24 hours ago for hourly timeframes)
+            const startTime = new Date();
+            
+            if (timeframe === '1d') {
+                startTime.setDate(startTime.getDate() - 30); // 30 days for daily chart
+            } else if (timeframe === '4h') {
+                startTime.setDate(startTime.getDate() - 7); // 7 days for 4h chart
+            } else if (timeframe === '1h') {
+                startTime.setDate(startTime.getDate() - 3); // 3 days for 1h chart
+            } else {
+                startTime.setDate(startTime.getDate() - 1); // 1 day for smaller timeframes
+            }
+            
+            const startTimestamp = Math.floor(startTime.getTime() / 1000);
+            const endTimestamp = Math.floor(now.getTime() / 1000);
+            
+            // Fetch historical data from Binance API
+            const response = await fetch(`/historical-chart-data/${symbol}?timeframe=${timeframe}&start=${startTimestamp}&end=${endTimestamp}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(`Error fetching historical data for ${symbol} ${timeframe}:`, error);
+            return [];
         }
     }
 
@@ -674,6 +762,104 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to create and populate a chart
+    async function createChart(canvas, symbol, timeframe) {
+        // Create chart with loading state
+        const chart = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: ['Loading...'],
+                datasets: [{
+                    label: `${symbol} Price`,
+                    data: [0],
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 1,
+                    pointHoverRadius: 5,
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                animation: {
+                    duration: 500
+                }
+            }
+        });
+        
+        // Fetch and update chart data
+        try {
+            const historicalData = await fetchHistoricalPriceData(symbol, timeframe);
+            if (historicalData && historicalData.length > 0) {
+                const labels = [];
+                const prices = [];
+                
+                historicalData.forEach(candle => {
+                    // Format date for x-axis labels
+                    const date = new Date(candle[0]);
+                    let formattedDate;
+                    
+                    if (timeframe === '1d') {
+                        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else if (timeframe === '4h' || timeframe === '1h') {
+                        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
+                                      date.toLocaleTimeString('en-US', { hour: '2-digit' });
+                    } else {
+                        formattedDate = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    }
+                    
+                    labels.push(formattedDate);
+                    prices.push(parseFloat(candle[4])); // Close price
+                });
+                
+                // Update chart with real data
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = prices;
+                chart.update();
+            }
+        } catch (error) {
+            console.error(`Error updating chart for ${symbol} ${timeframe}:`, error);
+            // Show error message on chart
+            chart.data.labels = ['Error loading data'];
+            chart.data.datasets[0].data = [0];
+            chart.update();
+        }
+        
+        return chart;
+    }
+    
     // Initial data fetch
     fetchAndDisplaySymbols();
 

@@ -10,6 +10,12 @@ export interface RSIData {
         MACD: number | null;
         signal: number | null;
         histogram: number | null;
+        previousMACD1: number | null;
+        previousSignal1: number | null;
+        previousHistogram1: number | null;
+        previousMACD2: number | null;
+        previousSignal2: number | null;
+        previousHistogram2: number | null;
     };
     moving_averages: number;
     oscillators: number;

@@ -13,6 +13,17 @@ import WebSocket from 'ws';
 import { createClient } from 'redis';
 import { fetchBinanceExchangeInfo } from './api';
 
+// In-memory cache for candlestick data to avoid duplicate API calls
+interface CandlestickCache {
+    [key: string]: {
+        data: any;
+        timestamp: number;
+        expiresAt: number;
+    };
+}
+
+const candlestickCache: CandlestickCache = {};
+
 function formatTimestamp(timestamp: number): string {
     const date = new Date(timestamp);
     return date.toLocaleString('en-GB', {
@@ -87,8 +98,111 @@ app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction)
     }
 });
 
+/**
+ * Shared function to get candlestick data with caching
+ * @param symbol - Trading pair symbol
+ * @param timeframe - Candlestick timeframe
+ * @param startTime - Start time in milliseconds
+ * @param endTime - End time in milliseconds
+ * @returns Candlestick data array
+ */
+async function getCandlestickData(symbol: string, timeframe: string, startTime?: number, endTime?: number) {
+    // Create a unique cache key based on the parameters
+    const cacheKey = `${symbol}:${timeframe}:${startTime || 0}:${endTime || 0}`;
+    
+    // Check if we have valid cached data
+    const now = Date.now();
+    const cachedItem = candlestickCache[cacheKey];
+    
+    if (cachedItem && cachedItem.expiresAt > now) {
+        console.log(`Serving candlestick data for ${cacheKey} from cache`);
+        return cachedItem.data;
+    }
+    
+    // If not in cache or expired, fetch from API
+    console.log(`Fetching candlestick data for ${cacheKey} from API`);
+    const data = await fetchCandlestickData(symbol, timeframe, startTime, endTime);
+    
+    // Cache the result for 5 minutes (300000ms)
+    if (data) {
+        candlestickCache[cacheKey] = {
+            data,
+            timestamp: now,
+            expiresAt: now + 300000 // 5 minute cache
+        };
+    }
+    
+    return data;
+}
+
+// Documentation route for historical chart data API
+app.get('/historical-chart-data', (req: Request, res: Response) => {
+    res.json({
+        description: 'API for fetching historical candlestick data',
+        usage: '/historical-chart-data/:symbol?timeframe=<timeframe>&start=<unix_timestamp>&end=<unix_timestamp>',
+        parameters: {
+            symbol: 'Required: Trading pair symbol (e.g., BTCUSDT)',
+            timeframe: 'Required: One of 15m, 30m, 1h, 4h, 1d',
+            start: 'Required: Start time in Unix timestamp (seconds)',
+            end: 'Required: End time in Unix timestamp (seconds)'
+        },
+        example: '/historical-chart-data/BTCUSDT?timeframe=1h&start=1620000000&end=1620100000'
+    });
+});
+
+// Endpoint to get historical chart data
+app.get('/historical-chart-data/:symbol', (req: Request, res: Response, next: NextFunction) => {
+    (async () => {
+        try {
+            const { symbol } = req.params;
+            const timeframe = req.query.timeframe as Timeframe;
+            const startTime = parseInt(req.query.start as string || '0');
+            const endTime = parseInt(req.query.end as string || '0');
+            
+            // Improved error handling with specific messages
+            const missingParams = [];
+            if (!symbol) missingParams.push('symbol');
+            if (!timeframe) missingParams.push('timeframe');
+            if (!startTime) missingParams.push('start');
+            if (!endTime) missingParams.push('end');
+            
+            if (missingParams.length > 0) {
+                return res.status(400).json({ 
+                    error: `Missing required parameters: ${missingParams.join(', ')}`,
+                    usage: '/historical-chart-data/:symbol?timeframe=<timeframe>&start=<unix_timestamp>&end=<unix_timestamp>',
+                    example: '/historical-chart-data/BTCUSDT?timeframe=1h&start=1620000000&end=1620100000'
+                });
+            }
+            
+            // Validate timeframe
+            const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
+            if (!validTimeframes.includes(timeframe)) {
+                return res.status(400).json({ 
+                    error: 'Invalid timeframe', 
+                    validTimeframes: validTimeframes.join(', ')
+                });
+            }
+            
+            // Get candlestick data using the shared function
+            const candlestickData = await getCandlestickData(symbol, timeframe, startTime * 1000, endTime * 1000);
+            
+            if (!candlestickData || candlestickData.length === 0) {
+                return res.status(404).json({ 
+                    error: 'No data found',
+                    message: `No data found for ${symbol} with timeframe ${timeframe} between ${new Date(startTime * 1000).toISOString()} and ${new Date(endTime * 1000).toISOString()}`
+                });
+            }
+            
+            res.json(candlestickData);
+        } catch (error) {
+            console.error('Error fetching historical chart data:', error);
+            next(error);
+        }
+    })();
+});
+
 // Endpoint to get historical data for backtesting
-app.get('/historical-data/:symbol', (req: Request<{ symbol: string }, any, any, { timestamp: string }>, res: Response, next: NextFunction) => {
+app.get('/  /:symbol', (req: Request<{ symbol: string }, any, any, { timestamp: string }>, res: Response, next: NextFunction) => {
     (async () => {
         try {
             const { symbol } = req.params;
@@ -102,8 +216,8 @@ app.get('/historical-data/:symbol', (req: Request<{ symbol: string }, any, any, 
             const allTimeframeData = await Promise.all(
                 validTimeframes.map(async (timeframe) => {
                     try {
-                        // Fetch historical candlestick data with the specified timestamp
-                        const candlestickData = await fetchCandlestickData(symbol, timeframe, timestamp);
+                        // Fetch historical candlestick data with the specified timestamp using shared function
+                        const candlestickData = await getCandlestickData(symbol, timeframe, timestamp);
                         if (!candlestickData || candlestickData.length < 2) {
                             return { timeframe, data: null };
                         }
@@ -237,6 +351,13 @@ const evaluateAllDataOnStartup = async () => {
     const BATCH_SIZE = 200;
     const CONCURRENT_REQUESTS = 200;
     const BATCH_DELAY = 50;
+    
+    // Get current timestamp for historical data
+    const now = Date.now();
+    // Get timestamp for 7 days ago (for historical chart data)
+    const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+
+    console.log('Pre-fetching candlestick data for both /data/:symbol and /historical-chart-data/:symbol endpoints...');
 
     // Split symbols into batches
     for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
@@ -250,27 +371,42 @@ const evaluateAllDataOnStartup = async () => {
             for (const timeframeChunk of timeframeChunks) {
                 await Promise.all(
                     timeframeChunk.map(async (tf) => {
-                        const cacheKey = `indicator:${symbol}:${tf}`;
-                        const needsUpdate = await shouldUpdateCache(cacheKey, forceUpdate);
-                        const cachedData = await redisClient.get(cacheKey);
+                        try {
+                            // 1. Pre-fetch and cache candlestick data for both endpoints
+                            // This will populate the candlestickCache for both current data and historical data
+                            console.log(`Pre-fetching candlestick data for ${symbol}:${tf}`);
+                            
+                            // Get current candlestick data (for /data/:symbol endpoint)
+                            await getCandlestickData(symbol, tf);
+                            
+                            // Get historical candlestick data (for /historical-chart-data/:symbol endpoint)
+                            await getCandlestickData(symbol, tf, sevenDaysAgo, now);
+                            
+                            // 2. Process indicator data for Redis cache
+                            const cacheKey = `indicator:${symbol}:${tf}`;
+                            const needsUpdate = await shouldUpdateCache(cacheKey, forceUpdate);
+                            const cachedData = await redisClient.get(cacheKey);
 
-                        if (cachedData && !needsUpdate) {
-                            console.log(`Using cached data for ${symbol}:${tf}`);
-                            // Start background update if approaching expiry
-                            if (CACHE_CONFIG.BACKGROUND_UPDATE && await redisClient.ttl(cacheKey) < CACHE_CONFIG.INDICATOR_TTL / 2) {
-                                updateCacheInBackground(symbol, tf).catch(console.error);
+                            if (cachedData && !needsUpdate) {
+                                console.log(`Using cached indicator data for ${symbol}:${tf}`);
+                                // Start background update if approaching expiry
+                                if (CACHE_CONFIG.BACKGROUND_UPDATE && await redisClient.ttl(cacheKey) < CACHE_CONFIG.INDICATOR_TTL / 2) {
+                                    updateCacheInBackground(symbol, tf).catch(console.error);
+                                }
+                                return;
                             }
-                            return;
-                        }
 
-                        console.log(`Fetching fresh data for ${symbol}:${tf}`);
-                        const indicatorData = await fetchDataForSymbolAndTimeframe(symbol, tf);
-                        if (indicatorData) {
-                            await redisClient.set(
-                                cacheKey,
-                                JSON.stringify(indicatorData),
-                                { EX: CACHE_CONFIG.INDICATOR_TTL }
-                            );
+                            console.log(`Fetching fresh indicator data for ${symbol}:${tf}`);
+                            const indicatorData = await fetchDataForSymbolAndTimeframe(symbol, tf);
+                            if (indicatorData) {
+                                await redisClient.set(
+                                    cacheKey,
+                                    JSON.stringify(indicatorData),
+                                    { EX: CACHE_CONFIG.INDICATOR_TTL }
+                                );
+                            }
+                        } catch (error) {
+                            console.error(`Error processing ${symbol}:${tf}:`, error);
                         }
                     })
                 );
@@ -285,7 +421,7 @@ const evaluateAllDataOnStartup = async () => {
         }
     }
 
-
+    console.log('Initial data evaluation completed - data cached for both endpoints');
 };
 
 // Setup periodic cache updates
