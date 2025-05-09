@@ -1,3 +1,5 @@
+// Using Lightweight Charts from global object (loaded via CDN)
+
 document.addEventListener('DOMContentLoaded', () => {
     const symbolsContainer = document.getElementById('symbolsContainer');
     const searchInput = document.getElementById('searchInput');
@@ -131,8 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adxStrongChecked = adxStrongCheckbox.checked;
 
         // Get timeframe filter states
-        const timeframe15mChecked = document.getElementById('timeframe_15m')?.checked || false;
-        const timeframe30mChecked = document.getElementById('timeframe_30m')?.checked || false;
+
         const timeframe1hChecked = document.getElementById('timeframe_1h')?.checked || false;
         const timeframe4hChecked = document.getElementById('timeframe_4h')?.checked || false;
         const timeframe1dChecked = document.getElementById('timeframe_1d')?.checked || false;
@@ -153,8 +154,9 @@ document.addEventListener('DOMContentLoaded', () => {
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
             !obvPositiveChecked && !obvNegativeChecked &&
             !adxWeakChecked && !adxStrongChecked &&
-            !timeframe15mChecked && !timeframe30mChecked && !timeframe1hChecked && 
-            !timeframe4hChecked && !timeframe1dChecked) {
+            !timeframe1hChecked &&
+            !timeframe4hChecked &&
+            !timeframe1dChecked) {
             return true;
         }
 
@@ -162,11 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check timeframe filters
         const timeframe = data.timeframe;
-        if (timeframe15mChecked || timeframe30mChecked || timeframe1hChecked ||
-            timeframe4hChecked || timeframe1dChecked) {
+        if (timeframe1hChecked || timeframe4hChecked || timeframe1dChecked) {
             matches = matches && (
-                (timeframe === '15m' && timeframe15mChecked) ||
-                (timeframe === '30m' && timeframe30mChecked) ||
                 (timeframe === '1h' && timeframe1hChecked) ||
                 (timeframe === '4h' && timeframe4hChecked) ||
                 (timeframe === '1d' && timeframe1dChecked)
@@ -649,18 +648,55 @@ document.addEventListener('DOMContentLoaded', () => {
                     indicators.appendChild(sectionElement);
                 });
 
-                // Add chart container
+                // Add chart button and container (initially hidden)
                 const chartContainer = document.createElement('div');
                 chartContainer.className = 'chart-container';
-                const canvas = document.createElement('canvas');
-                chartContainer.appendChild(canvas);
+                chartContainer.style.display = 'none'; // Initially hidden
+                chartContainer.style.position = 'relative'; // Required for absolute positioning of chart elements
+                
+                // Add Show Chart button
+                const chartButton = document.createElement('button');
+                chartButton.className = 'chart-button';
+                chartButton.textContent = 'Show Chart';
+                chartButton.dataset.symbol = symbol;
+                chartButton.dataset.timeframe = item.timeframe;
+                
+                // Add event listener to button
+                chartButton.addEventListener('click', function() {
+                    const container = this.nextElementSibling; // The chart container
+                    const symbol = this.dataset.symbol;
+                    const timeframe = this.dataset.timeframe;
+                    
+                    // Toggle chart visibility
+                    if (container.style.display === 'none') {
+                        // Show chart
+                        container.style.display = 'block';
+                        this.textContent = 'Hide Chart';
+                        
+                        // Check if chart already exists
+                        if (!container.chart) {
+                            // Create chart
+                            createChart(container, symbol, timeframe).then(chart => {
+                                // Store chart instance on container
+                                container.chart = chart;
+                            });
+                        }
+                    } else {
+                        // Hide chart
+                        container.style.display = 'none';
+                        this.textContent = 'Show Chart';
+                        
+                        // Clean up chart resources if needed
+                        if (container.chart && container.chart.resizeObserver) {
+                            container.chart.resizeObserver.disconnect();
+                        }
+                    }
+                });
                 
                 timeframeItem.appendChild(indicators);
+                timeframeItem.appendChild(chartButton); // Add button before container
                 timeframeItem.appendChild(chartContainer);
                 timeframeData.appendChild(timeframeItem);
-                
-                // Create chart (will be populated with data later)
-                createChart(canvas, symbol, item.timeframe);
             }
         });
 
@@ -709,9 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startTime.setDate(startTime.getDate() - 7); // 7 days for 4h chart
             } else if (timeframe === '1h') {
                 startTime.setDate(startTime.getDate() - 3); // 3 days for 1h chart
-            } else {
-                startTime.setDate(startTime.getDate() - 1); // 1 day for smaller timeframes
-            }
+            } 
             
             const startTimestamp = Math.floor(startTime.getTime() / 1000);
             const endTimestamp = Math.floor(now.getTime() / 1000);
@@ -762,99 +796,162 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Function to create and populate a chart
-    async function createChart(canvas, symbol, timeframe) {
-        // Create chart with loading state
-        const chart = new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: ['Loading...'],
-                datasets: [{
-                    label: `${symbol} Price`,
-                    data: [0],
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 1,
-                    pointHoverRadius: 5,
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    }
-                },
-                scales: {
-                    x: {
-                        display: true,
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
-                },
-                animation: {
-                    duration: 500
-                }
-            }
-        });
+    // Function to create and populate a chart using TradingView's Lightweight Charts
+    async function createChart(container, symbol, timeframe) {
+        console.log('Creating chart for', symbol, timeframe);
+        console.log('Container dimensions:', container.clientWidth, container.clientHeight);
+        
+        // Clear the container
+        container.innerHTML = '';
+        
+        // Create a loading message
+        const loadingMessage = document.createElement('div');
+        loadingMessage.textContent = 'Loading chart data...';
+        loadingMessage.style.textAlign = 'center';
+        loadingMessage.style.padding = '20px';
+        loadingMessage.style.color = '#666';
+        container.appendChild(loadingMessage);
+        
+        let chart = null;
         
         // Fetch and update chart data
         try {
             const historicalData = await fetchHistoricalPriceData(symbol, timeframe);
+            console.log('Fetched data:', historicalData ? historicalData.length : 0, 'candles');
+            
             if (historicalData && historicalData.length > 0) {
-                const labels = [];
-                const prices = [];
+                // Remove loading message
+                container.removeChild(loadingMessage);
                 
-                historicalData.forEach(candle => {
-                    // Format date for x-axis labels
-                    const date = new Date(candle[0]);
-                    let formattedDate;
-                    
-                    if (timeframe === '1d') {
-                        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    } else if (timeframe === '4h' || timeframe === '1h') {
-                        formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
-                                      date.toLocaleTimeString('en-US', { hour: '2-digit' });
-                    } else {
-                        formattedDate = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    }
-                    
-                    labels.push(formattedDate);
-                    prices.push(parseFloat(candle[4])); // Close price
+                // Create chart container div with explicit dimensions
+                const chartDiv = document.createElement('div');
+                chartDiv.style.width = '100%';
+                chartDiv.style.height = '100%';
+                chartDiv.style.position = 'absolute';
+                chartDiv.style.top = '0';
+                chartDiv.style.left = '0';
+                chartDiv.style.backgroundColor = '#f1f5f9';
+                container.appendChild(chartDiv);
+                
+                // Format data for Lightweight Charts
+                const candlestickData = historicalData.map(candle => ({
+                    time: parseInt(candle[0]) / 1000, // timestamp in seconds
+                    open: parseFloat(candle[1]), // open
+                    high: parseFloat(candle[2]), // high
+                    low: parseFloat(candle[3]), // low
+                    close: parseFloat(candle[4])  // close
+                }));
+                
+                console.log('Creating chart with dimensions:', container.clientWidth, container.clientHeight);
+                
+                // Create the chart with explicit dimensions
+                chart = LightweightCharts.createChart(chartDiv, {
+                    width: container.clientWidth || 500,
+                    height: container.clientHeight || 300,
+                    layout: {
+                        background: { type: 'solid', color: '#f1f5f9' }, // Explicitly set background
+                        textColor: '#1e293b',
+                        fontSize: 12,
+                        fontFamily: 'Inter, sans-serif'
+                    },
+                    grid: {
+                        vertLines: {
+                            color: 'rgba(42, 46, 57, 0.1)',
+                            style: 0
+                        },
+                        horzLines: {
+                            color: 'rgba(42, 46, 57, 0.1)',
+                            style: 0
+                        },
+                    },
+                    timeScale: {
+                        timeVisible: true,
+                        secondsVisible: false,
+                        borderColor: '#e2e8f0',
+                    },
+                    rightPriceScale: {
+                        borderColor: '#e2e8f0',
+                        scaleMargins: {
+                            top: 0.1,
+                            bottom: 0.1,
+                        },
+                    },
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal,
+                        vertLine: {
+                            width: 1,
+                            color: 'rgba(30, 41, 59, 0.5)',
+                            style: 2,
+                        },
+                        horzLine: {
+                            width: 1,
+                            color: 'rgba(30, 41, 59, 0.5)',
+                            style: 2,
+                            labelBackgroundColor: '#1e293b',
+                        },
+                    },
+                    localization: {
+                        timeFormatter: (time) => {
+                            const date = new Date(time * 1000);
+                            if (timeframe === '1d') {
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            } else if (timeframe === '4h' || timeframe === '1h') {
+                                return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+                            } else {
+                                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                            }
+                        },
+                    },
                 });
                 
-                // Update chart with real data
-                chart.data.labels = labels;
-                chart.data.datasets[0].data = prices;
-                chart.update();
+                // Add title
+                const title = document.createElement('div');
+                title.style.position = 'absolute';
+                title.style.top = '5px';
+                title.style.left = '10px';
+                title.style.fontSize = '14px';
+                title.style.fontWeight = 'bold';
+                title.style.color = '#1e293b';
+                title.textContent = `${symbol} - ${timeframe}`;
+                container.appendChild(title);
+                
+                // Create candlestick series
+                const candlestickSeries = chart.addCandlestickSeries({
+                    upColor: '#26A69A',
+                    downColor: '#EF5350',
+                    borderUpColor: '#00897B',
+                    borderDownColor: '#D32F2F',
+                    wickUpColor: '#00897B',
+                    wickDownColor: '#D32F2F',
+                });
+                
+                // Set the data
+                candlestickSeries.setData(candlestickData);
+                
+                // Fit content to view all data
+                chart.timeScale().fitContent();
+                
+                // Handle resize
+                const resizeObserver = new ResizeObserver(entries => {
+                    if (entries.length === 0 || entries[0].target !== container) {
+                        return;
+                    }
+                    const newRect = entries[0].contentRect;
+                    chart.applyOptions({ width: newRect.width, height: newRect.height });
+                });
+                
+                resizeObserver.observe(container);
+                
+                // Store resize observer on chart for cleanup
+                chart.resizeObserver = resizeObserver;
+            } else {
+                // No data available
+                loadingMessage.textContent = 'No data available';
             }
         } catch (error) {
             console.error(`Error updating chart for ${symbol} ${timeframe}:`, error);
-            // Show error message on chart
-            chart.data.labels = ['Error loading data'];
-            chart.data.datasets[0].data = [0];
-            chart.update();
+            // Show error message
+            loadingMessage.textContent = `Error loading data: ${error.message}`;
         }
         
         return chart;
@@ -990,11 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
         adxWeakCheckbox.checked = false;
         adxStrongCheckbox.checked = false;
 
-        // Reset timeframe checkboxes
-        document.getElementById('timeframe_1m').checked = false;
-        document.getElementById('timeframe_5m').checked = false;
-        document.getElementById('timeframe_15m').checked = false;
-        document.getElementById('timeframe_30m').checked = false;
+ 
         document.getElementById('timeframe_1h').checked = false;
         document.getElementById('timeframe_4h').checked = false;
         document.getElementById('timeframe_1d').checked = false;

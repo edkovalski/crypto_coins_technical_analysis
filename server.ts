@@ -45,6 +45,9 @@ app.use(express.json());
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve node_modules for ES modules
+app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+
 // Redis Client Setup
 const redisClient = createClient({
     url: 'redis://localhost:6379'
@@ -72,7 +75,7 @@ app.get('/symbols', async (req: Request, res: Response, next: NextFunction) => {
 app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { symbol } = req.params;
-        const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
+        const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
         const allTimeframeData = await Promise.all(
             validTimeframes.map(async (timeframe) => {
                 const cachedData = await redisClient.get(`indicator:${symbol}:${timeframe}`);
@@ -142,7 +145,7 @@ app.get('/historical-chart-data', (req: Request, res: Response) => {
         usage: '/historical-chart-data/:symbol?timeframe=<timeframe>&start=<unix_timestamp>&end=<unix_timestamp>',
         parameters: {
             symbol: 'Required: Trading pair symbol (e.g., BTCUSDT)',
-            timeframe: 'Required: One of 15m, 30m, 1h, 4h, 1d',
+            timeframe: 'Required: One of 1h, 4h, 1d',
             start: 'Required: Start time in Unix timestamp (seconds)',
             end: 'Required: End time in Unix timestamp (seconds)'
         },
@@ -175,7 +178,7 @@ app.get('/historical-chart-data/:symbol', (req: Request, res: Response, next: Ne
             }
             
             // Validate timeframe
-            const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
+            const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
             if (!validTimeframes.includes(timeframe)) {
                 return res.status(400).json({ 
                     error: 'Invalid timeframe', 
@@ -212,7 +215,7 @@ app.get('/  /:symbol', (req: Request<{ symbol: string }, any, any, { timestamp: 
                 return res.status(400).json({ error: 'Invalid timestamp' });
             }
 
-            const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
+            const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
             const allTimeframeData = await Promise.all(
                 validTimeframes.map(async (timeframe) => {
                     try {
@@ -339,7 +342,7 @@ async function updateCacheInBackground(symbol: string, timeframe: Timeframe) {
 // New function to fetch and evaluate data on server start
 const evaluateAllDataOnStartup = async () => {
     const symbols = await fetchBinanceSymbols();
-    const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
+    const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
 
     console.log('Starting initial data evaluation...');
     const forceUpdate = CACHE_CONFIG.FORCE_UPDATE_ON_START;
@@ -429,7 +432,7 @@ function setupPeriodicUpdates() {
     // Update indicators every 5 minutes
     setInterval(async () => {
         const symbols = await fetchBinanceSymbols();
-        const validTimeframes: Timeframe[] = ['15m', '30m', '1h', '4h', '1d'];
+        const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
 
         for (const symbol of symbols) {
             for (const tf of validTimeframes) {

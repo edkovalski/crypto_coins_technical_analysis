@@ -5,7 +5,7 @@ A Next.js application for displaying cryptocurrency data and technical indicator
 ## Features
 
 - Real-time cryptocurrency data display
-- Multiple timeframe support (1m, 5m, 15m, 30m, 1h, 4h, 1d)
+- Multiple timeframe support (1h, 4h, 1d)
 - Technical indicators:
   - RSI (Relative Strength Index)
   - MACD (Moving Average Convergence Divergence)
