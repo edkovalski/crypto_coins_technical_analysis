@@ -75,7 +75,7 @@ app.get('/symbols', async (req: Request, res: Response, next: NextFunction) => {
 app.get('/data/:symbol', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { symbol } = req.params;
-        const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
+        const validTimeframes: Timeframe[] = ['1h', '4h', '1d', '1w'];
         const allTimeframeData = await Promise.all(
             validTimeframes.map(async (timeframe) => {
                 const cachedData = await redisClient.get(`indicator:${symbol}:${timeframe}`);
@@ -178,7 +178,7 @@ app.get('/historical-chart-data/:symbol', (req: Request, res: Response, next: Ne
             }
             
             // Validate timeframe
-            const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
+            const validTimeframes: Timeframe[] = ['1h', '4h', '1d', '1w'];
             if (!validTimeframes.includes(timeframe)) {
                 return res.status(400).json({ 
                     error: 'Invalid timeframe', 
@@ -215,7 +215,7 @@ app.get('/  /:symbol', (req: Request<{ symbol: string }, any, any, { timestamp: 
                 return res.status(400).json({ error: 'Invalid timestamp' });
             }
 
-            const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
+            const validTimeframes: Timeframe[] = ['1h', '4h', '1d', '1w'];
             const allTimeframeData = await Promise.all(
                 validTimeframes.map(async (timeframe) => {
                     try {
@@ -342,7 +342,7 @@ async function updateCacheInBackground(symbol: string, timeframe: Timeframe) {
 // New function to fetch and evaluate data on server start
 const evaluateAllDataOnStartup = async () => {
     const symbols = await fetchBinanceSymbols();
-    const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
+    const validTimeframes: Timeframe[] = ['1h', '4h', '1d', '1w'];
 
     console.log('Starting initial data evaluation...');
     const forceUpdate = CACHE_CONFIG.FORCE_UPDATE_ON_START;
@@ -432,7 +432,7 @@ function setupPeriodicUpdates() {
     // Update indicators every 5 minutes
     setInterval(async () => {
         const symbols = await fetchBinanceSymbols();
-        const validTimeframes: Timeframe[] = ['1h', '4h', '1d'];
+        const validTimeframes: Timeframe[] = ['1h', '4h', '1d', '1w'];
 
         for (const symbol of symbols) {
             for (const tf of validTimeframes) {

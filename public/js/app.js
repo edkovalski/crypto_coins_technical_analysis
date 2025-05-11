@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeframe1hChecked = document.getElementById('timeframe_1h')?.checked || false;
         const timeframe4hChecked = document.getElementById('timeframe_4h')?.checked || false;
         const timeframe1dChecked = document.getElementById('timeframe_1d')?.checked || false;
+        const timeframe1wChecked = document.getElementById('timeframe_1w')?.checked || false;
 
         // If no filters are checked and ranges are at default, show all timeframes
         if (!ema10_20Checked && !ema10_20BelowChecked &&
@@ -156,7 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
             !adxWeakChecked && !adxStrongChecked &&
             !timeframe1hChecked &&
             !timeframe4hChecked &&
-            !timeframe1dChecked) {
+            !timeframe1dChecked &&
+            !timeframe1wChecked) {
             return true;
         }
 
@@ -164,11 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check timeframe filters
         const timeframe = data.timeframe;
-        if (timeframe1hChecked || timeframe4hChecked || timeframe1dChecked) {
+        if (timeframe1hChecked || timeframe4hChecked || timeframe1dChecked || timeframe1wChecked) {
             matches = matches && (
                 (timeframe === '1h' && timeframe1hChecked) ||
                 (timeframe === '4h' && timeframe4hChecked) ||
-                (timeframe === '1d' && timeframe1dChecked)
+                (timeframe === '1d' && timeframe1dChecked) ||
+                (timeframe === '1w' && timeframe1wChecked)
             );
         }
 
@@ -736,19 +739,19 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Get current time
             const now = new Date();
-            // Calculate start time (7 days ago for daily, 24 hours ago for hourly timeframes)
-            const startTime = new Date();
-            
-            if (timeframe === '1d') {
-                startTime.setDate(startTime.getDate() - 30); // 30 days for daily chart
-            } else if (timeframe === '4h') {
-                startTime.setDate(startTime.getDate() - 7); // 7 days for 4h chart
-            } else if (timeframe === '1h') {
-                startTime.setDate(startTime.getDate() - 3); // 3 days for 1h chart
-            } 
-            
-            const startTimestamp = Math.floor(startTime.getTime() / 1000);
+            // Calculate start time based on timeframe
+            let startTimestamp;
             const endTimestamp = Math.floor(now.getTime() / 1000);
+            
+            if (timeframe === '1w') {
+                startTimestamp = endTimestamp - (60 * 60 * 24 * 180); // 180 days for weekly
+            } else if (timeframe === '1d') {
+                startTimestamp = endTimestamp - (60 * 60 * 24 * 60); // 60 days
+            } else if (timeframe === '4h') {
+                startTimestamp = endTimestamp - (60 * 60 * 24 * 14); // 14 days
+            } else if (timeframe === '1h') {
+                startTimestamp = endTimestamp - (60 * 60 * 24 * 3); // 3 days for 1h chart
+            }
             
             // Fetch historical data from Binance API
             const response = await fetch(`/historical-chart-data/${symbol}?timeframe=${timeframe}&start=${startTimestamp}&end=${endTimestamp}`);
