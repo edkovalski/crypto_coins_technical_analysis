@@ -131,11 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const adxStrongChecked = adxStrongCheckbox.checked;
 
         // Get timeframe filter states
-        const timeframe15mChecked = document.getElementById('timeframe_15m')?.checked || false;
+
         const timeframe30mChecked = document.getElementById('timeframe_30m')?.checked || false;
         const timeframe1hChecked = document.getElementById('timeframe_1h')?.checked || false;
         const timeframe4hChecked = document.getElementById('timeframe_4h')?.checked || false;
         const timeframe1dChecked = document.getElementById('timeframe_1d')?.checked || false;
+        const timeframe1wChecked = document.getElementById('timeframe_1w')?.checked || false;
 
         // If no filters are checked and ranges are at default, show all timeframes
         if (!ema10_20Checked && !ema10_20BelowChecked &&
@@ -162,14 +163,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check timeframe filters
         const timeframe = data.timeframe;
-        if (timeframe15mChecked || timeframe30mChecked || timeframe1hChecked ||
+        if (timeframe30mChecked || timeframe1hChecked ||
             timeframe4hChecked || timeframe1dChecked) {
             matches = matches && (
-                (timeframe === '15m' && timeframe15mChecked) ||
+   
                 (timeframe === '30m' && timeframe30mChecked) ||
                 (timeframe === '1h' && timeframe1hChecked) ||
                 (timeframe === '4h' && timeframe4hChecked) ||
-                (timeframe === '1d' && timeframe1dChecked)
+                (timeframe === '1d' && timeframe1dChecked) ||
+                (timeframe === '1w' && timeframe1wChecked)
             );
         }
 
@@ -805,13 +807,12 @@ document.addEventListener('DOMContentLoaded', () => {
         adxStrongCheckbox.checked = false;
 
         // Reset timeframe checkboxes
-        document.getElementById('timeframe_1m').checked = false;
-        document.getElementById('timeframe_5m').checked = false;
-        document.getElementById('timeframe_15m').checked = false;
+
         document.getElementById('timeframe_30m').checked = false;
         document.getElementById('timeframe_1h').checked = false;
         document.getElementById('timeframe_4h').checked = false;
         document.getElementById('timeframe_1d').checked = false;
+        document.getElementById('timeframe_1w').checked = false;
 
         // Reset range inputs
         rsiMinInput.value = 0;
