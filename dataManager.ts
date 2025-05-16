@@ -74,9 +74,9 @@ export interface RSIData {
     };
 }
 
-export type Timeframe = '30m' | '1h' | '4h' | '1d' | '1w';
+export type Timeframe =  '4h' | '1d' | '1w';
 
-export const ALL_TIMEFRAMES: Timeframe[] = ['30m', '1h', '4h', '1d', '1w'];
+export const ALL_TIMEFRAMES: Timeframe[] = [ '4h', '1d', '1w'];
 
 type WsWebSocket = WebSocket;
 
@@ -84,6 +84,79 @@ type WsWebSocket = WebSocket;
 let symbolsCache: string[] | null = null;
 let symbolsCacheExpiry: number = 0;
 const SYMBOLS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Helper function to create an empty indicator data object when there's insufficient data
+const createEmptyIndicatorData = (symbol: string, timeframe: Timeframe): RSIData => {
+    return {
+        symbol,
+        timeframe,
+        rsi: null,
+        macd: {
+            MACD: null,
+            signal: null,
+            histogram: null
+        },
+        moving_averages: 0,
+        oscillators: 0,
+        sma10: null,
+        sma20: null,
+        sma50: null,
+        sma100: null,
+        sma200: null,
+        isCrossoverSMA2050: null,
+        isCrossoverSMA50200: null,
+        ema10: null,
+        ema20: null,
+        ema50: null,
+        ema100: null,
+        ema200: null,
+        isCrossoverEMA2050: null,
+        isCrossoverEMA50200: null,
+        price: null,
+        adx: {
+            adx: null,
+            plusDI: null,
+            minusDI: null
+        },
+        vwap: null,
+        bollingerBands: {
+            upper: null,
+            middle: null,
+            lower: null
+        },
+        obv: {
+            obv: null,
+            obvSma: null
+        },
+        fibonacci: {
+            levels: {
+                '0': null,
+                '0.236': null,
+                '0.382': null,
+                '0.5': null,
+                '0.618': null,
+                '0.786': null,
+                '1': null
+            },
+            high: null,
+            low: null
+        },
+        cmf: null,
+        ichimoku: {
+            conversion: null,
+            base: null,
+            spanA: null,
+            spanB: null,
+            leadingSpanA: null,
+            leadingSpanB: null
+        },
+        atr: null,
+        stochastic: {
+            k: null,
+            d: null
+        }
+    };
+};
 
 export const fetchBinanceSymbols = async (): Promise<string[]> => {
     const now = Date.now();
@@ -126,8 +199,15 @@ export const fetchDataForSymbolAndTimeframe = async (symbol: string, timeframe: 
     try {
         // Use provided historical data or fetch new data
         const candlestickData = historicalData || await fetchCandlestickData(symbol, timeframe);
-        if (!candlestickData || candlestickData.length < 2) {
-            throw new Error('Insufficient candlestick data');
+        
+        // Check if we have sufficient data for calculations
+        // Weekly timeframe might have less data points available
+        const minRequiredCandles = timeframe === '1w' ? 2 : 15;
+        
+        if (!candlestickData || candlestickData.length < minRequiredCandles) {
+            console.log(`Not enough data points for ${symbol} ${timeframe} (got ${candlestickData?.length || 0}, need ${minRequiredCandles})`);
+            // Return a placeholder object with null values instead of throwing an error
+            return createEmptyIndicatorData(symbol, timeframe);
         }
 
         // Get the latest price from the last candlestick

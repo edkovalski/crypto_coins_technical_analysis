@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ema20_50BelowCheckbox = document.getElementById('ema20_50_below_crossover');
     const ema50_200Checkbox = document.getElementById('ema50_200_crossover');
     const ema50_200BelowCheckbox = document.getElementById('ema50_200_below_crossover');
+    const ema50_100Checkbox = document.getElementById('ema50_100_crossover');
+    const ema50_100BelowCheckbox = document.getElementById('ema50_100_below_crossover');
     const sma50_200Checkbox = document.getElementById('sma50_200_crossover');
     const rsiMinInput = document.getElementById('rsi_min');
     const rsiMaxInput = document.getElementById('rsi_max');
@@ -106,6 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const ema20_50BelowChecked = ema20_50BelowCheckbox.checked;
         const ema50_200Checked = ema50_200Checkbox.checked;
         const ema50_200BelowChecked = ema50_200BelowCheckbox.checked;
+        const ema50_100Checked = ema50_100Checkbox.checked;
+        const ema50_100BelowChecked = ema50_100BelowCheckbox.checked;
         const sma50_200Checked = sma50_200Checkbox.checked;
         const rsiMin = parseFloat(rsiMinInput.value) || 0;
         const rsiMax = parseFloat(rsiMaxInput.value) || 100;
@@ -132,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get timeframe filter states
 
-        const timeframe30mChecked = document.getElementById('timeframe_30m')?.checked || false;
-        const timeframe1hChecked = document.getElementById('timeframe_1h')?.checked || false;
+
         const timeframe4hChecked = document.getElementById('timeframe_4h')?.checked || false;
         const timeframe1dChecked = document.getElementById('timeframe_1d')?.checked || false;
         const timeframe1wChecked = document.getElementById('timeframe_1w')?.checked || false;
@@ -142,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ema10_20Checked && !ema10_20BelowChecked &&
             !ema20_50Checked && !ema20_50BelowChecked &&
             !ema50_200Checked && !ema50_200BelowChecked &&
-            !sma50_200Checked &&
+            !sma50_200Checked && !ema50_100Checked && !ema50_100BelowChecked &&
             rsiMin === 0 && rsiMax === 100 &&
             stochMin === 0 && stochMax === 100 &&
             atrMin === 0 && atrMax === 1000 &&
@@ -154,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
             !obvPositiveChecked && !obvNegativeChecked &&
             !adxWeakChecked && !adxStrongChecked &&
-            !timeframe15mChecked && !timeframe30mChecked && !timeframe1hChecked && 
-            !timeframe4hChecked && !timeframe1dChecked) {
+           
+            !timeframe4hChecked && !timeframe1dChecked&& !timeframe1wChecked) {
             return true;
         }
 
@@ -163,12 +166,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check timeframe filters
         const timeframe = data.timeframe;
-        if (timeframe30mChecked || timeframe1hChecked ||
-            timeframe4hChecked || timeframe1dChecked) {
+        if (
+            timeframe4hChecked || timeframe1dChecked || timeframe1wChecked) {
             matches = matches && (
    
-                (timeframe === '30m' && timeframe30mChecked) ||
-                (timeframe === '1h' && timeframe1hChecked) ||
+
                 (timeframe === '4h' && timeframe4hChecked) ||
                 (timeframe === '1d' && timeframe1dChecked) ||
                 (timeframe === '1w' && timeframe1wChecked)
@@ -193,6 +195,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (ema50_200BelowChecked) {
             matches = matches && checkEMABelowCrossover(data.ema50, data.ema200);
+        }
+        if (ema50_100Checked) {
+            matches = matches && checkEMACrossover(data.ema50, data.ema100);
+        }
+        if (ema50_100BelowChecked) {
+            matches = matches && checkEMABelowCrossover(data.ema50, data.ema100);
         }
 
         // Check SMA crossovers
@@ -704,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterElements = [
         ema10_20Checkbox, ema10_20BelowCheckbox,
         ema20_50Checkbox, ema20_50BelowCheckbox,
-        ema50_200Checkbox, ema50_200BelowCheckbox,
+        ema50_200Checkbox, ema50_200BelowCheckbox,       ema50_100Checkbox, ema50_100BelowCheckbox,
         sma50_200Checkbox,
         rsiMinInput, rsiMaxInput,
         stochMinInput, stochMaxInput,
@@ -788,6 +796,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ema20_50BelowCheckbox.checked = false;
         ema50_200Checkbox.checked = false;
         ema50_200BelowCheckbox.checked = false;
+        ema50_100Checkbox.checked = false;
+        ema50_100BelowCheckbox.checked = false;
         sma50_200Checkbox.checked = false;
         priceAboveEma10Checkbox.checked = false;
         priceAboveEma20Checkbox.checked = false;
@@ -808,8 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset timeframe checkboxes
 
-        document.getElementById('timeframe_30m').checked = false;
-        document.getElementById('timeframe_1h').checked = false;
+
         document.getElementById('timeframe_4h').checked = false;
         document.getElementById('timeframe_1d').checked = false;
         document.getElementById('timeframe_1w').checked = false;
