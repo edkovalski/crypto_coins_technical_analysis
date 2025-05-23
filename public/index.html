@@ -125,6 +125,20 @@
                 </div>
 
                 <div class="filter-group">
+                    <h3>Bollinger Bands</h3>
+                    <div class="filter-checkboxes">
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="price_above_bband_upper">
+                            <span>Price > Upper Band</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="price_below_bband_lower">
+                            <span>Price < Lower Band</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
                     <h3>RSI Range</h3>
                     <div class="range-filter">
                         <div class="range-inputs">
@@ -164,6 +178,14 @@
                         <label class="filter-checkbox">
                             <input type="checkbox" id="macd_histogram_negative">
                             <span>MACD Histogram < 0</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="macd_line_positive">
+                            <span>MACD Line > 0</span>
+                        </label>
+                        <label class="filter-checkbox">
+                            <input type="checkbox" id="macd_line_negative">
+                            <span>MACD Line < 0</span>
                         </label>
                     </div>
                 </div>
@@ -215,8 +237,8 @@
                     <h3>Timeframes</h3>
                     <div class="filter-group">
 
-                       
-             
+
+
                         <label><input type="checkbox" id="timeframe_4h" value="4h"> 4 Hours</label>
                         <label><input type="checkbox" id="timeframe_1d" value="1d"> 1 Day</label>
                         <label><input type="checkbox" id="timeframe_1w" value="1w"> 1 Week</label>

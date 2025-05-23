@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceBelowEma20Checkbox = document.getElementById('price_below_ema20');
     const macdHistogramPositiveCheckbox = document.getElementById('macd_histogram_positive');
     const macdHistogramNegativeCheckbox = document.getElementById('macd_histogram_negative');
+    const macdLinePositiveCheckbox = document.getElementById('macd_line_positive');
+    const macdLineNegativeCheckbox = document.getElementById('macd_line_negative');
     const obvPositiveCheckbox = document.getElementById('obv_positive');
     const obvNegativeCheckbox = document.getElementById('obv_negative');
     const adxWeakCheckbox = document.getElementById('adx_weak');
@@ -32,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceBelowEma100Checkbox = document.getElementById('price_below_ema100');
     const priceAboveEma200Checkbox = document.getElementById('price_above_ema200');
     const priceBelowEma200Checkbox = document.getElementById('price_below_ema200');
+    const priceAboveBBandUpperCheckbox = document.getElementById('price_above_bband_upper');
+    const priceBelowBBandLowerCheckbox = document.getElementById('price_below_bband_lower');
     const resetFiltersBtn = document.getElementById('resetFilters');
     let allSymbols = [];
 
@@ -117,6 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const stochMax = parseFloat(stochMaxInput.value) || 100;
         const atrMin = parseFloat(atrMinInput.value) || 0;
         const atrMax = parseFloat(atrMaxInput.value) || 1000;
+        const priceAboveBBandUpperChecked = priceAboveBBandUpperCheckbox.checked;
+        const priceBelowBBandLowerChecked = priceBelowBBandLowerCheckbox.checked;
         const priceAboveEma10Checked = priceAboveEma10Checkbox.checked;
         const priceAboveEma20Checked = priceAboveEma20Checkbox.checked;
         const priceBelowEma10Checked = priceBelowEma10Checkbox.checked;
@@ -129,6 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceBelowEma200Checked = priceBelowEma200Checkbox.checked;
         const macdHistogramPositiveChecked = macdHistogramPositiveCheckbox.checked;
         const macdHistogramNegativeChecked = macdHistogramNegativeCheckbox.checked;
+        const macdLinePositiveChecked = macdLinePositiveCheckbox?.checked || false;
+        const macdLineNegativeChecked = macdLineNegativeCheckbox?.checked || false;
         const obvPositiveChecked = obvPositiveCheckbox.checked;
         const obvNegativeChecked = obvNegativeCheckbox.checked;
         const adxWeakChecked = adxWeakCheckbox.checked;
@@ -149,16 +157,18 @@ document.addEventListener('DOMContentLoaded', () => {
             rsiMin === 0 && rsiMax === 100 &&
             stochMin === 0 && stochMax === 100 &&
             atrMin === 0 && atrMax === 1000 &&
+            !priceAboveBBandUpperChecked && !priceBelowBBandLowerChecked &&
             !priceAboveEma10Checked && !priceAboveEma20Checked &&
             !priceBelowEma10Checked && !priceBelowEma20Checked &&
             !priceAboveEma50Checked && !priceBelowEma50Checked &&
             !priceAboveEma100Checked && !priceBelowEma100Checked &&
             !priceAboveEma200Checked && !priceBelowEma200Checked &&
             !macdHistogramPositiveChecked && !macdHistogramNegativeChecked &&
+            !macdLinePositiveChecked && !macdLineNegativeChecked &&
             !obvPositiveChecked && !obvNegativeChecked &&
             !adxWeakChecked && !adxStrongChecked &&
-           
-            !timeframe4hChecked && !timeframe1dChecked&& !timeframe1wChecked) {
+
+            !timeframe4hChecked && !timeframe1dChecked && !timeframe1wChecked) {
             return true;
         }
 
@@ -169,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (
             timeframe4hChecked || timeframe1dChecked || timeframe1wChecked) {
             matches = matches && (
-   
+
 
                 (timeframe === '4h' && timeframe4hChecked) ||
                 (timeframe === '1d' && timeframe1dChecked) ||
@@ -248,12 +258,27 @@ document.addEventListener('DOMContentLoaded', () => {
             matches = matches && data.price !== null && data.ema200 !== null && data.price < data.ema200;
         }
 
+        // Check Price vs Bollinger Bands conditions
+        if (priceAboveBBandUpperChecked) {
+            matches = matches && data.price != null && data.bollingerBands && data.bollingerBands.upper != null && data.price > data.bollingerBands.upper;
+        }
+        if (priceBelowBBandLowerChecked) {
+            matches = matches && data.price != null && data.bollingerBands && data.bollingerBands.lower != null && data.price < data.bollingerBands.lower;
+        }
+
         // Check MACD conditions
         if (macdHistogramPositiveChecked) {
             matches = matches && data.macd !== null && data.macd.histogram > 0;
         }
         if (macdHistogramNegativeChecked) {
             matches = matches && data.macd !== null && data.macd.histogram < 0;
+        }
+        // Check MACD line conditions
+        if (macdLinePositiveChecked) {
+            matches = matches && data.macd !== null && data.macd.MACD > 0;
+        }
+        if (macdLineNegativeChecked) {
+            matches = matches && data.macd !== null && data.macd.MACD < 0;
         }
 
         // Check OBV conditions
@@ -712,8 +737,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterElements = [
         ema10_20Checkbox, ema10_20BelowCheckbox,
         ema20_50Checkbox, ema20_50BelowCheckbox,
-        ema50_200Checkbox, ema50_200BelowCheckbox,       ema50_100Checkbox, ema50_100BelowCheckbox,
-        sma50_200Checkbox,
+        ema50_200Checkbox, ema50_200BelowCheckbox, ema50_100Checkbox, ema50_100BelowCheckbox,
+        sma50_200Checkbox, priceAboveBBandUpperCheckbox, priceBelowBBandLowerCheckbox,
         rsiMinInput, rsiMaxInput,
         stochMinInput, stochMaxInput,
         atrMinInput, atrMaxInput,
@@ -723,6 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
         priceAboveEma100Checkbox, priceBelowEma100Checkbox,
         priceAboveEma200Checkbox, priceBelowEma200Checkbox,
         macdHistogramPositiveCheckbox, macdHistogramNegativeCheckbox,
+        macdLinePositiveCheckbox, macdLineNegativeCheckbox,
         obvPositiveCheckbox, obvNegativeCheckbox,
         adxWeakCheckbox, adxStrongCheckbox,
         searchInput
@@ -809,8 +835,12 @@ document.addEventListener('DOMContentLoaded', () => {
         priceBelowEma100Checkbox.checked = false;
         priceAboveEma200Checkbox.checked = false;
         priceBelowEma200Checkbox.checked = false;
+        priceAboveBBandUpperCheckbox.checked = false;
+        priceBelowBBandLowerCheckbox.checked = false;
         macdHistogramPositiveCheckbox.checked = false;
         macdHistogramNegativeCheckbox.checked = false;
+        macdLinePositiveCheckbox.checked = false;
+        macdLineNegativeCheckbox.checked = false;
         obvPositiveCheckbox.checked = false;
         obvNegativeCheckbox.checked = false;
         adxWeakCheckbox.checked = false;
@@ -840,4 +870,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add event listener for reset filters button
     resetFiltersBtn.addEventListener('click', resetAllFilters);
-}); 
+});
