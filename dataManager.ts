@@ -74,9 +74,9 @@ export interface RSIData {
     };
 }
 
-export type Timeframe =  '4h' | '1d' | '1w';
+export type Timeframe = '1h' | '4h' | '1d' | '1w';
 
-export const ALL_TIMEFRAMES: Timeframe[] = [ '4h', '1d', '1w'];
+export const ALL_TIMEFRAMES: Timeframe[] = ['1h', '4h', '1d', '1w'];
 
 type WsWebSocket = WebSocket;
 
@@ -199,11 +199,11 @@ export const fetchDataForSymbolAndTimeframe = async (symbol: string, timeframe: 
     try {
         // Use provided historical data or fetch new data
         const candlestickData = historicalData || await fetchCandlestickData(symbol, timeframe);
-        
+
         // Check if we have sufficient data for calculations
         // Weekly timeframe might have less data points available
         const minRequiredCandles = timeframe === '1w' ? 2 : 15;
-        
+
         if (!candlestickData || candlestickData.length < minRequiredCandles) {
             console.log(`Not enough data points for ${symbol} ${timeframe} (got ${candlestickData?.length || 0}, need ${minRequiredCandles})`);
             // Return a placeholder object with null values instead of throwing an error

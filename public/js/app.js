@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get timeframe filter states
 
-
+        const timeframe1hChecked = document.getElementById('timeframe_1h')?.checked || false;
         const timeframe4hChecked = document.getElementById('timeframe_4h')?.checked || false;
         const timeframe1dChecked = document.getElementById('timeframe_1d')?.checked || false;
         const timeframe1wChecked = document.getElementById('timeframe_1w')?.checked || false;
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             !obvPositiveChecked && !obvNegativeChecked &&
             !adxWeakChecked && !adxStrongChecked &&
 
-            !timeframe4hChecked && !timeframe1dChecked && !timeframe1wChecked) {
+            !timeframe1hChecked && !timeframe4hChecked && !timeframe1dChecked && !timeframe1wChecked) {
             return true;
         }
 
@@ -177,10 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check timeframe filters
         const timeframe = data.timeframe;
         if (
-            timeframe4hChecked || timeframe1dChecked || timeframe1wChecked) {
+            timeframe1hChecked || timeframe4hChecked || timeframe1dChecked || timeframe1wChecked) {
             matches = matches && (
 
-
+                (timeframe === '1h' && timeframe1hChecked) ||
                 (timeframe === '4h' && timeframe4hChecked) ||
                 (timeframe === '1d' && timeframe1dChecked) ||
                 (timeframe === '1w' && timeframe1wChecked)
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset timeframe checkboxes
 
-
+        document.getElementById('timeframe_1h').checked = false;
         document.getElementById('timeframe_4h').checked = false;
         document.getElementById('timeframe_1d').checked = false;
         document.getElementById('timeframe_1w').checked = false;
