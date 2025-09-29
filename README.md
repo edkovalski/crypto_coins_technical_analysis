@@ -55,7 +55,7 @@ app_ti/
 ### Install
 
 ```bash
-git clone https://github.com/edkovalski/crypto-data-dashboard.git
+git clone https://github.com/edkovalski/crypto_coins_technical_analysis.git
 cd app_ti
 npm install
 ```
