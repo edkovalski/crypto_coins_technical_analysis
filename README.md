@@ -55,7 +55,7 @@ app_ti/
 ### Install
 
 ```bash
-git clone https://github.com/yourusername/crypto-data-dashboard.git
+git clone https://github.com/edkovalski/crypto-data-dashboard.git
 cd app_ti
 npm install
 ```
