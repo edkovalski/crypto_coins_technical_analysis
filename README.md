@@ -56,7 +56,7 @@ app_ti/
 
 ```bash
 git clone https://github.com/edkovalski/crypto_coins_technical_analysis.git
-cd app_ti
+cd crypto_coins_technical_analysis
 npm install
 ```
 
